@@ -24,11 +24,14 @@ function Shell({ children }: { children: ReactNode }) {
     <div className="min-h-dvh">
       <header className="border-b border-[var(--color-hairline)]">
         <div className="container-page flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-lg bg-[var(--color-ink)] text-[13px] font-bold text-[#08090a]">
-              N
-            </span>
-            <span className="text-[15px] font-semibold tracking-[-0.02em]">Nexa</span>
+          <Link to="/" className="flex min-h-[44px] items-center" aria-label={SITE.name}>
+            <img
+              src="/brand/nexa-wordmark.png"
+              alt={SITE.name}
+              width={1395}
+              height={383}
+              className="h-7 w-auto"
+            />
           </Link>
           <span className="eyebrow">Admin</span>
         </div>

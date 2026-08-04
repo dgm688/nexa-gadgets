@@ -9,12 +9,13 @@ export function Footer() {
     <footer className="border-t border-[var(--color-hairline)]">
       <div className="container-page grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr] md:py-20">
         <div className="max-w-sm">
-          <div className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-lg bg-[var(--color-ink)] text-[13px] font-bold text-[#08090a]">
-              N
-            </span>
-            <span className="text-[15px] font-semibold tracking-[-0.02em]">Nexa Gadgets</span>
-          </div>
+          <img
+            src="/brand/nexa-wordmark.png"
+            alt={SITE.name}
+            width={1395}
+            height={383}
+            className="h-8 w-auto"
+          />
           <p className="mt-5 text-[14px] leading-relaxed text-[var(--color-ink-dim)]">
             US electronics retailer with physical stores in all 50 states. Every price 20% below
             retail, same-day delivery, and a 50% deposit option with the balance paid on delivery.

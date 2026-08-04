@@ -107,17 +107,25 @@ export function Header() {
         }`}
       >
         <div className="container-page flex h-16 items-center gap-3">
+          {/*
+            The wordmark is a light-background lockup with its own black frame,
+            so it sits directly on the dark canvas as a bounded object rather
+            than being recoloured. Height-constrained; width follows the 3.64:1
+            ratio, and the explicit dimensions reserve space so it cannot shift
+            layout while loading.
+          */}
           <Link
             to="/"
-            className="flex min-h-[44px] shrink-0 items-center gap-2.5 pr-1"
+            className="flex min-h-[44px] shrink-0 items-center pr-1"
             aria-label={SITE.name}
           >
-            <span className="grid size-8 place-items-center rounded-lg bg-[var(--color-ink)] text-[13px] font-bold text-[#08090a]">
-              N
-            </span>
-            <span className="hidden text-[15px] font-semibold tracking-[-0.02em] sm:block">
-              Nexa
-            </span>
+            <img
+              src="/brand/nexa-wordmark.png"
+              alt={SITE.name}
+              width={1395}
+              height={383}
+              className="h-6 w-auto sm:h-7"
+            />
           </Link>
 
           <nav className="ml-4 hidden items-center gap-1 lg:flex" ref={browseRef}>
