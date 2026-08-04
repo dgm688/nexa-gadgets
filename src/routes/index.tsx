@@ -1,15 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Headphones, MapPin, ShieldCheck, Truck } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Headphones, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { StoreLayout } from "@/components/StoreLayout";
 import { Hero } from "@/components/Hero";
-import { Countdown } from "@/components/Countdown";
-import { ProductGrid, Section, SectionHeading } from "@/components/Section";
-import { CATEGORIES, PRODUCTS, productsInCategory } from "@/lib/catalog";
+import { ProductCard } from "@/components/ProductCard";
+import {
+  ButtonGhost,
+  ButtonPrimary,
+  RevealGrid,
+  RevealItem,
+  Section,
+  SectionHead,
+} from "@/components/primitives";
+import { CATEGORIES, PRODUCTS } from "@/lib/catalog";
 import { productsQuery } from "@/lib/products";
 import { SITE } from "@/lib/site";
+import { fadeUp, revealOnce } from "@/lib/motion";
 import { telHref, whatsappGeneral } from "@/lib/whatsapp";
-import { SALE } from "@/lib/site";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -24,191 +32,189 @@ const STEPS = [
   {
     n: "01",
     title: "Pick it up in store",
-    body: "We have physical shops in all 50 states. Walk in, see the product, pay in full and take it home the same day.",
+    body: "Physical shops in all 50 states. Walk in, see the product, pay in full and take it home the same day.",
   },
   {
     n: "02",
-    title: "Or pay a 50% deposit",
-    body: "Prefer delivery? Reserve any product with a 50% deposit and we dispatch it from your nearest store.",
+    title: "Or reserve with 50%",
+    body: "Prefer delivery? Reserve any product with a 50% deposit and we dispatch from your nearest store.",
   },
   {
     n: "03",
-    title: "Pay the balance on delivery",
-    body: "The remaining 50% is paid to the driver when your order arrives at your door. No hidden fees.",
+    title: "Pay the rest at the door",
+    body: "The remaining 50% goes to the driver when your order arrives. No hidden fees, no surprises.",
   },
 ];
+
+const grid = "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4";
 
 function Home() {
   const { data: products = PRODUCTS } = useQuery(productsQuery);
 
-  const onSale = products.filter((p) => p.originalPrice > p.price).slice(0, 10);
-  const featured = products.filter((p) => p.featured).slice(0, 10);
-  const fresh = products.filter((p) => p.isNew).slice(0, 10);
+  const featured = products.find((p) => p.featured) ?? products[0];
+  const onSale = products
+    .filter((p) => p.originalPrice > p.price && p.slug !== featured?.slug)
+    .slice(0, 8);
+  const fresh = products.filter((p) => p.isNew).slice(0, 4);
   const preOwned = products.filter((p) => p.condition === "certified-pre-owned");
-
-  const spotlightCategories = ["mobile-phones", "computers", "tv-audio-systems", "audio-music"];
 
   return (
     <StoreLayout>
-      <Hero />
+      <Hero featured={featured} />
 
-      {PROMISES.length > 0 && (
-        <div className="border-b border-border bg-card">
-          <div className="container-page grid gap-6 py-8 sm:grid-cols-2 lg:grid-cols-4">
-            {PROMISES.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="flex items-start gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-sky text-electric">
-                  <Icon className="size-5" />
-                </span>
-                <div>
-                  <p className="font-semibold text-navy-deep">{title}</p>
-                  <p className="text-sm text-muted-foreground">{body}</p>
-                </div>
+      {/* Trust strip — hairline dividers instead of boxes, so it reads as one band. */}
+      <div className="border-b border-[var(--color-hairline)]">
+        <div className="container-page grid divide-y divide-[var(--color-hairline)] sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x lg:divide-[var(--color-hairline)]">
+          {PROMISES.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="flex items-start gap-3 py-6 lg:px-6 lg:first:pl-0 lg:last:pr-0">
+              <Icon className="mt-0.5 size-4 shrink-0 text-[var(--color-ink-faint)]" />
+              <div>
+                <p className="text-[14px] font-medium tracking-[-0.01em]">{title}</p>
+                <p className="mt-0.5 text-[12px] text-[var(--color-ink-faint)]">{body}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <Section>
-        <div className="flex flex-col items-center gap-8 rounded-3xl bg-navy px-6 py-12 text-center text-white lg:flex-row lg:justify-between lg:text-left">
-          <div>
-            <p className="text-xs font-bold tracking-widest text-gold">
-              LIMITED TIME · 2 MONTHS ONLY
-            </p>
-            <h2 className="mt-3 font-display text-3xl">20% off every single product</h2>
-            <p className="mt-3 max-w-lg text-white/80">
-              Prices you see are already discounted. When the timer hits zero, they go back up.
-            </p>
-          </div>
-          <Countdown endsAt={SALE.endsAt} />
-        </div>
-      </Section>
-
-      <Section>
-        <SectionHeading title="Shop by category" />
-        <p className="-mt-4 mb-6 text-muted-foreground">
-          Everything from flagship phones to CCTV kits.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.slug}
-              to="/category/$slug"
-              params={{ slug: c.slug }}
-              className="rounded-2xl border border-border bg-card p-5 transition hover:border-electric hover:shadow-md"
-            >
-              <p className="font-display text-lg font-semibold text-navy-deep">{c.name}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{c.blurb}</p>
-            </Link>
+            </div>
           ))}
         </div>
-      </Section>
-
-      <Section>
-        <SectionHeading eyebrow="Flash sale — 20% off" title="Sale prices while the countdown lasts" />
-        <ProductGrid products={onSale} />
-      </Section>
-
-      <div className="bg-sky/50">
-        <Section>
-          <p className="text-xs font-bold tracking-widest text-electric">TWO WAYS TO BUY</p>
-          <h2 className="mt-2 max-w-2xl font-display text-2xl text-navy-deep sm:text-3xl">
-            Collect in store, or pay 50% now and 50% on delivery
-          </h2>
-          <p className="mt-3 max-w-2xl text-muted-foreground">
-            Because we hold stock in physical shops in every state, you never wait on a warehouse.
-          </p>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {STEPS.map((s) => (
-              <div key={s.n} className="rounded-2xl border border-border bg-card p-6">
-                <span className="font-display text-3xl font-bold text-sky-foreground text-electric/40">
-                  {s.n}
-                </span>
-                <p className="mt-3 font-display text-lg font-semibold text-navy-deep">{s.title}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </Section>
       </div>
 
       <Section>
-        <SectionHeading eyebrow="Featured picks" title="What our stores sell most" />
-        <ProductGrid products={featured} />
+        <SectionHead
+          overline="Flash sale"
+          title="20% off, while the clock runs"
+          lede="Every price already reflects the discount. When the countdown ends, they go back up."
+          action={
+            <ButtonGhost href="/search?q=" className="hidden sm:inline-flex">
+              View all products
+            </ButtonGhost>
+          }
+        />
+        <RevealGrid className={grid}>
+          {onSale.map((p) => (
+            <RevealItem key={p.slug}>
+              <ProductCard product={p} />
+            </RevealItem>
+          ))}
+        </RevealGrid>
       </Section>
 
-      <Section>
-        <SectionHeading eyebrow="New arrivals" title="Just landed in store" />
-        <ProductGrid products={fresh} />
+      <Section className="border-t border-[var(--color-hairline)]">
+        <SectionHead
+          overline="Categories"
+          title="Shop by what you need"
+          lede="Flagship phones through to CCTV kits — all stocked locally."
+        />
+        <RevealGrid className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {CATEGORIES.map((c) => (
+            <RevealItem key={c.slug}>
+              <Link
+                to="/category/$slug"
+                params={{ slug: c.slug }}
+                className="group flex h-full items-center justify-between gap-4 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] p-5 transition-colors duration-200 hover:border-[var(--color-hairline-strong)] hover:bg-[var(--color-surface-2)]"
+              >
+                <div className="min-w-0">
+                  <p className="text-[15px] font-medium tracking-[-0.01em]">{c.name}</p>
+                  <p className="mt-1 truncate text-[12px] text-[var(--color-ink-faint)]">
+                    {c.blurb}
+                  </p>
+                </div>
+                <ArrowRight className="size-4 shrink-0 text-[var(--color-ink-faint)] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--color-ink)]" />
+              </Link>
+            </RevealItem>
+          ))}
+        </RevealGrid>
       </Section>
 
-      {spotlightCategories.map((slug) => {
-        const cat = CATEGORIES.find((c) => c.slug === slug);
-        const items = productsInCategory(slug, products);
-        if (!cat || items.length === 0) return null;
-        return (
-          <Section key={slug}>
-            <SectionHeading title={cat.name} viewAllSlug={cat.slug} />
-            <ProductGrid products={items} />
-          </Section>
-        );
-      })}
-
-      {preOwned.length > 0 && (
-        <Section>
-          <SectionHeading eyebrow="Certified pre-owned" title="Tested, graded and warranty backed" />
-          <ProductGrid products={preOwned} />
+      {fresh.length > 0 && (
+        <Section className="border-t border-[var(--color-hairline)]">
+          <SectionHead overline="New arrivals" title="Just landed in store" />
+          <RevealGrid className={grid}>
+            {fresh.map((p) => (
+              <RevealItem key={p.slug}>
+                <ProductCard product={p} />
+              </RevealItem>
+            ))}
+          </RevealGrid>
         </Section>
       )}
 
-      <div className="bg-navy-deep text-white">
-        <Section>
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
-            <div>
-              <h2 className="font-display text-2xl sm:text-3xl">
-                A store in every state means same-day delivery
-              </h2>
-              <p className="mt-4 leading-relaxed text-white/80">
-                We stock locally, not in one distant warehouse. Order before the day is out and a
-                driver from your nearest Nexa store brings it to you — you pay the remaining 50% at
-                the door.
-              </p>
-            </div>
-            <div className="rounded-3xl border border-white/15 bg-white/5 p-8">
-              <h3 className="font-display text-xl">Not sure what to buy? Our team is on 24/7</h3>
-              <p className="mt-3 text-sm leading-relaxed text-white/80">
-                Tell us your budget and what you need it for. We'll recommend the right product, hold
-                it at your local store, and lock in the 20% sale price for you.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <a
-                  href={whatsappGeneral()}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full bg-whatsapp px-6 py-3 text-sm font-bold text-white transition hover:brightness-95"
-                >
-                  Chat with us
-                </a>
-                <Link
-                  to="/search"
-                  search={{ q: "" }}
-                  className="rounded-full border border-white/30 px-6 py-3 text-sm font-bold transition hover:bg-white/10"
-                >
-                  Browse products
-                </Link>
+      <Section className="border-t border-[var(--color-hairline)]">
+        <SectionHead
+          overline="How it works"
+          title="Two ways to buy, no waiting on a warehouse"
+          lede="We hold stock in physical shops in every state, so nothing ships from a distant depot."
+        />
+        <RevealGrid className="grid gap-5 md:grid-cols-3">
+          {STEPS.map((s) => (
+            <RevealItem key={s.n}>
+              <div className="h-full rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface)] p-7">
+                <span className="tabular font-mono text-[13px] text-[var(--color-accent-hot)]">
+                  {s.n}
+                </span>
+                <h3 className="mt-4 text-lg tracking-[-0.02em]">{s.title}</h3>
+                <p className="mt-3 text-[14px] leading-relaxed text-[var(--color-ink-dim)]">
+                  {s.body}
+                </p>
               </div>
-              <p className="mt-5 text-xs text-white/60">
-                Call{" "}
-                <a href={telHref()} className="underline">
-                  {SITE.phone}
-                </a>{" "}
-                · {SITE.address}
-              </p>
-            </div>
-          </div>
+            </RevealItem>
+          ))}
+        </RevealGrid>
+      </Section>
+
+      {preOwned.length > 0 && (
+        <Section className="border-t border-[var(--color-hairline)]">
+          <SectionHead
+            overline="Certified pre-owned"
+            title="Tested, graded, warranty backed"
+            lede="Ex-UK machines that pass a full diagnostic before they reach the shelf."
+          />
+          <RevealGrid className={grid}>
+            {preOwned.map((p) => (
+              <RevealItem key={p.slug}>
+                <ProductCard product={p} />
+              </RevealItem>
+            ))}
+          </RevealGrid>
         </Section>
-      </div>
+      )}
+
+      <Section className="border-t border-[var(--color-hairline)]">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={revealOnce}
+          className="lit relative overflow-hidden rounded-3xl border border-[var(--color-hairline)] bg-[var(--color-surface)] px-7 py-14 text-center md:px-16 md:py-20"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-0 size-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.09] blur-[130px]"
+            style={{ background: "var(--color-accent)" }}
+          />
+          <div className="relative">
+            <p className="eyebrow">Not sure what to buy?</p>
+            <h2 className="mx-auto mt-4 max-w-2xl text-3xl md:text-[2.75rem] md:leading-[1.05]">
+              Tell us your budget. We'll pick the right one.
+            </h2>
+            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-[var(--color-ink-dim)]">
+              Our team is on 24/7. We'll recommend a product, hold it at your local store, and lock
+              in the sale price for you.
+            </p>
+            <div className="mt-9 flex flex-wrap justify-center gap-3">
+              <ButtonPrimary href={whatsappGeneral()} external>
+                Chat with us
+              </ButtonPrimary>
+              <ButtonGhost href="/search?q=">Browse products</ButtonGhost>
+            </div>
+            <p className="mt-7 text-[12px] text-[var(--color-ink-faint)]">
+              Or call{" "}
+              <a href={telHref()} className="tabular text-[var(--color-ink-dim)] hover:text-[var(--color-ink)]">
+                {SITE.phone}
+              </a>{" "}
+              · {SITE.address}
+            </p>
+          </div>
+        </motion.div>
+      </Section>
     </StoreLayout>
   );
 }

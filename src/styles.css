@@ -1,59 +1,75 @@
 @import "tailwindcss";
 
 /*
- * Design tokens lifted verbatim from the deployed Nexa Gadgets site
- * (read off :root at runtime), so the rebuild renders the same palette.
+ * Nexa Gadgets design system.
+ *
+ * Dark-first, near-monochrome. Product photography is white-background, so
+ * image tiles stay light and sit as bright objects on a dark canvas — the
+ * page recedes, the product advances. One restrained accent; no gradients
+ * used as decoration.
  */
 @theme {
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  --radius: 0.875rem;
+  --radius: 0.75rem;
 
-  --color-background: oklch(99.5% 0.003 240);
-  --color-foreground: oklch(29% 0.06 254);
-  --color-card: oklch(100% 0 0);
-  --color-card-foreground: oklch(29% 0.06 254);
-  --color-popover: oklch(100% 0 0);
-  --color-popover-foreground: oklch(12.9% 0.042 264.695);
+  /* Canvas */
+  --color-canvas: #08090a;
+  --color-surface: #101113;
+  --color-surface-2: #17191c;
+  --color-elevated: #1c1f23;
 
-  --color-primary: oklch(45% 0.104 253);
-  --color-primary-foreground: oklch(100% 0 0);
-  --color-secondary: oklch(96.8% 0.012 240);
-  --color-secondary-foreground: oklch(36% 0.095 254);
+  /*
+   * Ink. All three tiers clear WCAG AA (4.5:1) against both --color-canvas and
+   * the lighter --color-surface; the tertiary grey was originally #6b7280,
+   * which measured 3.9:1 on surface and failed.
+   */
+  --color-ink: #f7f8f8;
+  --color-ink-dim: #a8b0b9;
+  --color-ink-faint: #8b939d;
 
-  --color-muted: oklch(96.8% 0.012 240);
-  --color-muted-foreground: oklch(54.5% 0.032 250);
-  --color-accent: oklch(94.5% 0.026 240);
-  --color-accent-foreground: oklch(36% 0.095 254);
+  /* Hairlines — the Linear/Vercel signature */
+  --color-hairline: rgba(255, 255, 255, 0.08);
+  --color-hairline-strong: rgba(255, 255, 255, 0.14);
 
-  --color-destructive: oklch(58.6% 0.222 17.6);
-  --color-destructive-foreground: oklch(98.4% 0.003 247.858);
+  /* Accent — single, restrained */
+  --color-accent: #5b7cfa;
+  --color-accent-hot: #7d95ff;
 
-  --color-border: oklch(92.2% 0.014 245);
-  --color-input: oklch(92.2% 0.014 245);
-  --color-ring: oklch(60% 0.148 246);
+  /* Semantics */
+  --color-whatsapp: #25d366;
+  --color-sale: #ff6b5b;
+  --color-positive: #3ecf8e;
 
-  /* Brand accents */
-  --color-navy: oklch(45% 0.104 253);
-  --color-navy-deep: oklch(36% 0.095 254);
-  --color-electric: oklch(60% 0.148 246);
-  --color-gold: oklch(89.2% 0.102 90.4);
-  --color-sky: oklch(94.5% 0.026 240);
-  --color-pink: oklch(83.3% 0.131 330.6);
-  --color-whatsapp: oklch(76.1% 0.201 149.7);
+  /* Light-tile for product imagery */
+  --color-tile: #f2f3f5;
+
+  --shadow-lift: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 2px 4px rgba(0, 0, 0, 0.35), 0 20px 48px -16px rgba(0, 0, 0, 0.7);
 }
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   * {
-    border-color: var(--color-border);
+    border-color: var(--color-hairline);
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   h1,
@@ -61,14 +77,87 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-weight: 600;
+    letter-spacing: -0.028em;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Visible, on-brand focus ring — never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #fff;
+  }
+
+  /* Numerals in prices/counters must not reflow as they change. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-@utility container-page {
-  margin-inline: auto;
-  width: 100%;
-  max-width: 80rem;
-  padding-inline: 1rem;
+@layer utilities {
+  .container-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 82rem;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Eyebrow / overline label used across sections. */
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .hairline {
+    border: 1px solid var(--color-hairline);
+  }
+
+  /* Subtle top-edge highlight that reads as a lit surface, not a shadow. */
+  .lit::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.16),
+      transparent
+    );
+  }
+}
+
+/* Honour the OS setting — motion is decoration, never the only signal. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

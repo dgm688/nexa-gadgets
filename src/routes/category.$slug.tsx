@@ -1,10 +1,13 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { StoreLayout } from "@/components/StoreLayout";
-import { ProductGrid, Section } from "@/components/Section";
+import { ProductCard } from "@/components/ProductCard";
+import { ButtonPrimary, RevealGrid, RevealItem, Section } from "@/components/primitives";
 import { CATEGORIES, PRODUCTS, productsInCategory } from "@/lib/catalog";
 import { productsQuery } from "@/lib/products";
 import { whatsappGeneral } from "@/lib/whatsapp";
+import { EASE_OUT } from "@/lib/motion";
 
 export const Route = createFileRoute("/category/$slug")({ component: CategoryPage });
 
@@ -19,34 +22,43 @@ function CategoryPage() {
 
   return (
     <StoreLayout>
-      <div className="bg-navy-deep text-white">
-        <div className="container-page py-12">
-          <h1 className="font-display text-3xl sm:text-4xl">{category.name}</h1>
-          <p className="mt-2 text-white/75">{category.blurb}</p>
-          <p className="mt-4 text-sm text-white/60">
-            {items.length} {items.length === 1 ? "product" : "products"} · every price already 20%
-            off
+      <div className="border-b border-[var(--color-hairline)]">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT }}
+          className="container-page py-16 md:py-20"
+        >
+          <p className="eyebrow">Category</p>
+          <h1 className="mt-3 text-4xl tracking-[-0.03em] md:text-5xl">{category.name}</h1>
+          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-[var(--color-ink-dim)]">
+            {category.blurb}
           </p>
-        </div>
+          <p className="tabular mt-6 text-[13px] text-[var(--color-ink-faint)]">
+            {items.length} {items.length === 1 ? "product" : "products"} · every price already 20% off
+          </p>
+        </motion.div>
       </div>
 
       <Section>
         {items.length > 0 ? (
-          <ProductGrid products={items} />
+          <RevealGrid className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {items.map((p) => (
+              <RevealItem key={p.slug}>
+                <ProductCard product={p} />
+              </RevealItem>
+            ))}
+          </RevealGrid>
         ) : (
-          <div className="rounded-3xl border border-dashed border-border py-20 text-center">
-            <p className="font-display text-xl text-navy-deep">Nothing listed here yet</p>
-            <p className="mt-2 text-muted-foreground">
-              We stock this category in store — message us and we'll tell you what's on the shelf.
+          <div className="rounded-3xl border border-dashed border-[var(--color-hairline-strong)] px-6 py-24 text-center">
+            <h2 className="text-2xl tracking-[-0.02em]">Nothing listed here yet</h2>
+            <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[var(--color-ink-dim)]">
+              We stock this category in store — message us and we'll tell you exactly what's on the
+              shelf today.
             </p>
-            <a
-              href={whatsappGeneral()}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-6 inline-block rounded-full bg-whatsapp px-6 py-3 text-sm font-bold text-white"
-            >
+            <ButtonPrimary href={whatsappGeneral()} external className="mt-8">
               Ask on WhatsApp
-            </a>
+            </ButtonPrimary>
           </div>
         )}
       </Section>

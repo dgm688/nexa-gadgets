@@ -1,77 +1,90 @@
 import { Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
 import type { Product } from "@/lib/catalog";
 import { depositFor, discountPercent, formatPrice } from "@/lib/format";
 import { whatsappOrder } from "@/lib/whatsapp";
+import { springSoft } from "@/lib/motion";
+import { Pill } from "./primitives";
 
+/**
+ * The product image sits on a light tile so white-background photography reads
+ * as a lit object against the dark page rather than a glowing rectangle.
+ *
+ * The card surface is a single stretched link (title → product page); the
+ * WhatsApp CTA sits above it in the stacking order so the two targets never
+ * overlap and no interactive element is nested inside another.
+ */
 export function ProductCard({ product }: { product: Product }) {
   const off = discountPercent(product.price, product.originalPrice);
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-lg hover:shadow-navy/5">
-      <Link
-        to="/product/$slug"
-        params={{ slug: product.slug }}
-        className="relative block aspect-square overflow-hidden bg-sky/40"
-      >
-        <img
+    <motion.article
+      whileHover={{ y: -4 }}
+      transition={springSoft}
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface)] transition-colors duration-200 hover:border-[var(--color-hairline-strong)]"
+    >
+      <div className="relative aspect-4/3 overflow-hidden bg-[var(--color-tile)]">
+        <motion.img
           src={product.images[0]}
           alt={product.name}
           loading="lazy"
-          className="size-full object-cover transition duration-500 group-hover:scale-105"
+          width={900}
+          height={675}
+          className="size-full object-cover"
+          whileHover={{ scale: 1.04 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         />
-        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          {off > 0 && (
-            <span className="rounded-full bg-destructive px-2.5 py-1 text-[11px] font-bold text-white">
-              -{off}% flash sale
-            </span>
-          )}
-          {product.isNew && (
-            <span className="rounded-full bg-gold px-2.5 py-1 text-[11px] font-bold text-navy-deep">
-              New
-            </span>
-          )}
+
+        <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {off > 0 && <Pill tone="onImageSale">−{off}%</Pill>}
+          {product.isNew && <Pill tone="onImageDark">New</Pill>}
           {product.condition === "certified-pre-owned" && (
-            <span className="rounded-full bg-navy px-2.5 py-1 text-[11px] font-bold text-white">
-              Certified pre-owned
-            </span>
+            <Pill tone="onImageDark">Certified</Pill>
           )}
         </div>
-      </Link>
+      </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <p className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
-          {product.brand}
-        </p>
-        <Link
-          to="/product/$slug"
-          params={{ slug: product.slug }}
-          className="mt-1 line-clamp-2 font-display text-[15px] font-semibold leading-snug hover:text-electric"
-        >
-          {product.name}
-        </Link>
+      <div className="flex flex-1 flex-col p-5">
+        <p className="eyebrow">{product.brand}</p>
 
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-xl font-bold text-navy">{formatPrice(product.price)}</span>
+        <h3 className="mt-2 text-[15px] font-medium leading-snug tracking-[-0.01em]">
+          <Link
+            to="/product/$slug"
+            params={{ slug: product.slug }}
+            className="after:absolute after:inset-0 after:content-[''] hover:text-white"
+          >
+            {product.name}
+          </Link>
+        </h3>
+
+        <div className="mt-4 flex items-baseline gap-2.5">
+          <span className="tabular text-xl font-semibold tracking-[-0.02em]">
+            {formatPrice(product.price)}
+          </span>
           {off > 0 && (
-            <span className="text-sm text-muted-foreground line-through">
+            <span className="tabular text-[13px] text-[var(--color-ink-faint)] line-through">
               {formatPrice(product.originalPrice)}
             </span>
           )}
         </div>
 
-        <p className="mt-1 text-xs text-muted-foreground">
-          Reserve for {formatPrice(depositFor(product.price))} · rest on delivery
+        <p className="mt-1.5 text-[12px] text-[var(--color-ink-faint)]">
+          or {formatPrice(depositFor(product.price))} now, rest on delivery
         </p>
+
+        <div className="mt-5 flex-1" />
 
         <a
           href={whatsappOrder(product)}
           target="_blank"
           rel="noreferrer"
-          className="mt-4 inline-flex items-center justify-center rounded-xl bg-whatsapp px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95"
+          className="relative z-10 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-full border border-[var(--color-hairline-strong)] py-3 text-[13px] font-semibold transition-colors duration-200 hover:border-[var(--color-whatsapp)] hover:bg-[var(--color-whatsapp)] hover:text-[#08090a]"
         >
           Order now
+          <ArrowUpRight className="size-3.5" />
         </a>
       </div>
-    </article>
+    </motion.article>
   );
 }

@@ -1,14 +1,25 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Headphones, Store, Truck } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, ChevronRight, Headphones, Store, Truck } from "lucide-react";
 import { StoreLayout } from "@/components/StoreLayout";
-import { ProductGrid, Section, SectionHeading } from "@/components/Section";
+import { ProductCard } from "@/components/ProductCard";
+import {
+  ButtonGhost,
+  ButtonPrimary,
+  Pill,
+  RevealGrid,
+  RevealItem,
+  Section,
+  SectionHead,
+} from "@/components/primitives";
 import { CATEGORIES, PRODUCTS } from "@/lib/catalog";
 import { productsQuery } from "@/lib/products";
 import { depositFor, discountPercent, formatPrice } from "@/lib/format";
 import { SITE } from "@/lib/site";
 import { telHref, whatsappOrder } from "@/lib/whatsapp";
+import { EASE_OUT } from "@/lib/motion";
 
 export const Route = createFileRoute("/product/$slug")({ component: ProductPage });
 
@@ -31,39 +42,54 @@ function ProductPage() {
   const deposit = depositFor(product.price);
   const related = products
     .filter((p) => p.category === product.category && p.slug !== product.slug)
-    .slice(0, 5);
+    .slice(0, 4);
 
   return (
     <StoreLayout>
-      <div className="container-page pt-6 text-sm text-muted-foreground">
-        <Link to="/" className="hover:text-electric">
+      <nav
+        aria-label="Breadcrumb"
+        className="container-page flex items-center gap-1.5 pt-8 text-[13px] text-[var(--color-ink-faint)]"
+      >
+        <Link to="/" className="hover:text-[var(--color-ink)]">
           Home
         </Link>
         {category && (
           <>
-            {" / "}
+            <ChevronRight className="size-3.5 opacity-50" />
             <Link
               to="/category/$slug"
               params={{ slug: category.slug }}
-              className="hover:text-electric"
+              className="hover:text-[var(--color-ink)]"
             >
               {category.name}
             </Link>
           </>
         )}
-        {" / "}
-        <span className="text-foreground">{product.name}</span>
-      </div>
+        <ChevronRight className="size-3.5 opacity-50" />
+        <span className="truncate text-[var(--color-ink-dim)]">{product.name}</span>
+      </nav>
 
-      <div className="container-page grid gap-10 py-8 lg:grid-cols-2">
-        <div>
-          <div className="overflow-hidden rounded-3xl border border-border bg-sky/40">
-            <img
+      <div className="container-page grid gap-12 py-10 lg:grid-cols-2 lg:gap-16 lg:py-14">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT }}
+          className="lg:sticky lg:top-24 lg:self-start"
+        >
+          <div className="overflow-hidden rounded-3xl border border-[var(--color-hairline)] bg-[var(--color-tile)]">
+            <motion.img
+              key={product.images[active]}
               src={product.images[active]}
               alt={product.name}
+              width={900}
+              height={900}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
               className="aspect-square w-full object-cover"
             />
           </div>
+
           {product.images.length > 1 && (
             <div className="mt-4 flex gap-3">
               {product.images.map((src, i) => (
@@ -72,8 +98,11 @@ function ProductPage() {
                   type="button"
                   onClick={() => setActive(i)}
                   aria-label={`View image ${i + 1}`}
-                  className={`size-20 overflow-hidden rounded-xl border-2 transition ${
-                    i === active ? "border-electric" : "border-border hover:border-electric/50"
+                  aria-current={i === active}
+                  className={`size-20 overflow-hidden rounded-xl border-2 bg-[var(--color-tile)] transition-colors ${
+                    i === active
+                      ? "border-[var(--color-accent)]"
+                      : "border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]"
                   }`}
                 >
                   <img src={src} alt="" className="size-full object-cover" />
@@ -81,111 +110,121 @@ function ProductPage() {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
-        <div>
-          <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
-            {product.brand}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.06 }}
+        >
+          <p className="eyebrow">{product.brand}</p>
+          <h1 className="mt-3 text-3xl tracking-[-0.03em] sm:text-4xl">{product.name}</h1>
+          <p className="mt-4 text-[16px] leading-relaxed text-[var(--color-ink-dim)]">
+            {product.shortDescription}
           </p>
-          <h1 className="mt-2 font-display text-3xl text-navy-deep sm:text-4xl">{product.name}</h1>
-          <p className="mt-3 text-muted-foreground">{product.shortDescription}</p>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="font-display text-4xl font-bold text-navy">
+          <div className="mt-8 flex flex-wrap items-baseline gap-3">
+            <span className="tabular text-4xl font-semibold tracking-[-0.03em]">
               {formatPrice(product.price)}
             </span>
             {off > 0 && (
               <>
-                <span className="text-lg text-muted-foreground line-through">
+                <span className="tabular text-[15px] text-[var(--color-ink-faint)] line-through">
                   {formatPrice(product.originalPrice)}
                 </span>
-                <span className="rounded-full bg-destructive px-3 py-1 text-xs font-bold text-white">
-                  Save {off}%
-                </span>
+                <Pill tone="sale">Save {off}%</Pill>
               </>
             )}
           </div>
 
           {product.inStock && (
-            <p className="mt-3 font-semibold text-whatsapp">In stock — ready to deliver</p>
+            <p className="mt-3 inline-flex items-center gap-2 text-[13px] text-[var(--color-positive)]">
+              <span className="size-1.5 rounded-full bg-[var(--color-positive)]" />
+              In stock — ready to deliver
+            </p>
           )}
 
-          <div className="mt-6 rounded-2xl border border-border bg-sky/40 p-5">
-            <p className="font-semibold text-navy-deep">
-              Pay {formatPrice(deposit)} now (50% deposit)
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              The remaining {formatPrice(product.price - deposit)} is paid on delivery. Or pay in
-              full at any Nexa store in your state and take it home the same day.
+          {/* The deposit split is the single biggest question a buyer has, so it
+              sits directly above the CTA rather than below the fold. */}
+          <div className="mt-8 rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface)] p-6">
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-[14px] text-[var(--color-ink-dim)]">Pay now (50%)</span>
+              <span className="tabular text-lg font-semibold">{formatPrice(deposit)}</span>
+            </div>
+            <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-[var(--color-hairline)] pt-3">
+              <span className="text-[14px] text-[var(--color-ink-dim)]">On delivery</span>
+              <span className="tabular text-lg font-semibold">
+                {formatPrice(product.price - deposit)}
+              </span>
+            </div>
+            <p className="mt-4 text-[12px] leading-relaxed text-[var(--color-ink-faint)]">
+              Or pay in full at any Nexa store in your state and take it home the same day.
             </p>
           </div>
 
           <div className="mt-6 space-y-3">
-            <a
+            <ButtonPrimary
               href={whatsappOrder(product)}
-              target="_blank"
-              rel="noreferrer"
-              className="block rounded-2xl bg-navy py-4 text-center font-bold text-white transition hover:brightness-110"
+              external
+              className="w-full py-4 text-[15px]"
             >
-              Order now — 50% deposit
-            </a>
-            <a
-              href={telHref()}
-              className="block rounded-2xl border border-border py-4 text-center font-semibold text-navy transition hover:border-electric"
-            >
+              Order now — {formatPrice(deposit)} deposit
+            </ButtonPrimary>
+            <ButtonGhost href={telHref()} className="tabular w-full py-4">
               Call {SITE.phone}
-            </a>
+            </ButtonGhost>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-2">
-              <Store className="size-4 text-electric" />
-              In store, all 50 states
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Truck className="size-4 text-electric" />
-              Same-day delivery
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Headphones className="size-4 text-electric" />
-              24/7 support
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {product.specs.length > 0 && (
-        <Section className="!py-8">
-          <h2 className="font-display text-xl text-navy-deep">Specifications</h2>
-          <dl className="mt-4 grid gap-x-10 gap-y-3 sm:grid-cols-2">
-            {product.specs.map((s) => (
-              <div
-                key={s.label}
-                className="flex justify-between gap-4 border-b border-border py-2 text-sm"
-              >
-                <dt className="text-muted-foreground">{s.label}</dt>
-                <dd className="text-right font-medium">{s.value}</dd>
+          <div className="mt-8 grid grid-cols-3 gap-4 border-t border-[var(--color-hairline)] pt-6">
+            {[
+              { icon: Store, label: "In store, 50 states" },
+              { icon: Truck, label: "Same-day delivery" },
+              { icon: Headphones, label: "24/7 support" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="text-[12px] text-[var(--color-ink-faint)]">
+                <Icon className="mb-2 size-4" />
+                {label}
               </div>
             ))}
-          </dl>
-        </Section>
-      )}
+          </div>
 
-      <Section className="!py-8">
-        <h2 className="font-display text-xl text-navy-deep">Description</h2>
-        <p className="mt-3 max-w-3xl leading-relaxed text-muted-foreground">
-          {product.description}
-        </p>
-        <p className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground">
-          <CheckCircle2 className="size-4 text-whatsapp" />
-          Backed by our in-store warranty and 24/7 support line.
-        </p>
-      </Section>
+          {product.specs.length > 0 && (
+            <div className="mt-10">
+              <h2 className="eyebrow mb-4">Specifications</h2>
+              <dl className="divide-y divide-[var(--color-hairline)] border-y border-[var(--color-hairline)]">
+                {product.specs.map((s) => (
+                  <div key={s.label} className="flex justify-between gap-6 py-3 text-[14px]">
+                    <dt className="text-[var(--color-ink-faint)]">{s.label}</dt>
+                    <dd className="text-right font-medium">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+
+          <div className="mt-10">
+            <h2 className="eyebrow mb-4">Description</h2>
+            <p className="text-[15px] leading-relaxed text-[var(--color-ink-dim)]">
+              {product.description}
+            </p>
+            <p className="mt-4 inline-flex items-center gap-2 text-[13px] text-[var(--color-ink-faint)]">
+              <Check className="size-4 text-[var(--color-positive)]" />
+              Backed by our in-store warranty and 24/7 support line.
+            </p>
+          </div>
+        </motion.div>
+      </div>
 
       {related.length > 0 && (
-        <Section>
-          <SectionHeading title="You may also like" />
-          <ProductGrid products={related} />
+        <Section className="border-t border-[var(--color-hairline)]">
+          <SectionHead overline="More in this category" title="You may also like" />
+          <RevealGrid className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {related.map((p) => (
+              <RevealItem key={p.slug}>
+                <ProductCard product={p} />
+              </RevealItem>
+            ))}
+          </RevealGrid>
         </Section>
       )}
     </StoreLayout>

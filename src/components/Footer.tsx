@@ -1,81 +1,90 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { CATEGORIES } from "@/lib/catalog";
 import { SITE } from "@/lib/site";
-import { telHref } from "@/lib/whatsapp";
+import { telHref, whatsappGeneral } from "@/lib/whatsapp";
 
 export function Footer() {
   return (
-    <footer className="mt-20 bg-navy-deep text-white/80">
-      <div className="container-page grid gap-10 py-14 md:grid-cols-4">
-        <div className="md:col-span-1">
-          <div className="inline-block rounded-2xl bg-white p-2">
-            <img src="/brand/nexa-logo.png" alt={SITE.name} className="size-10 object-contain" />
+    <footer className="border-t border-[var(--color-hairline)]">
+      <div className="container-page grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr] md:py-20">
+        <div className="max-w-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="grid size-8 place-items-center rounded-lg bg-[var(--color-ink)] text-[13px] font-bold text-[#08090a]">
+              N
+            </span>
+            <span className="text-[15px] font-semibold tracking-[-0.02em]">Nexa Gadgets</span>
           </div>
-          <p className="mt-4 text-sm leading-relaxed">
-            US-based electronics dealer with physical stores in all 50 states. 20% off storewide,
-            same-day delivery, and a 50% deposit option with the balance paid on delivery.
+          <p className="mt-5 text-[14px] leading-relaxed text-[var(--color-ink-dim)]">
+            US electronics retailer with physical stores in all 50 states. Every price 20% below
+            retail, same-day delivery, and a 50% deposit option with the balance paid on delivery.
           </p>
+          <a
+            href={whatsappGeneral()}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--color-hairline-strong)] px-5 py-3 text-[13px] font-medium transition-colors hover:border-[var(--color-whatsapp)] hover:text-[var(--color-whatsapp)]"
+          >
+            Chat on WhatsApp
+          </a>
         </div>
 
-        <div>
-          <h3 className="text-xs font-bold tracking-widest text-white">SHOP</h3>
-          <ul className="mt-4 space-y-2.5 text-sm">
+        <nav aria-label="Shop">
+          <h3 className="eyebrow">Shop</h3>
+          <ul className="mt-3">
             {CATEGORIES.slice(0, 7).map((c) => (
               <li key={c.slug}>
                 <Link
                   to="/category/$slug"
                   params={{ slug: c.slug }}
-                  className="transition hover:text-gold"
+                  className="inline-block py-2 text-[14px] text-[var(--color-ink-dim)] transition-colors hover:text-[var(--color-ink)]"
                 >
                   {c.name}
                 </Link>
               </li>
             ))}
           </ul>
-        </div>
+        </nav>
 
         <div>
-          <h3 className="text-xs font-bold tracking-widest text-white">CONTACT</h3>
-          <ul className="mt-4 space-y-2.5 text-sm">
-            <li className="flex items-start gap-2">
-              <MapPin className="mt-0.5 size-4 shrink-0" />
+          <h3 className="eyebrow">Contact</h3>
+          <ul className="mt-5 space-y-3 text-[14px] text-[var(--color-ink-dim)]">
+            <li className="flex items-start gap-2.5">
+              <MapPin className="mt-0.5 size-4 shrink-0 text-[var(--color-ink-faint)]" />
               {SITE.address}
             </li>
-            <li className="flex items-start gap-2">
-              <Phone className="mt-0.5 size-4 shrink-0" />
-              <a href={telHref()} className="transition hover:text-gold">
+            <li className="flex items-start gap-2.5">
+              <Phone className="mt-0.5 size-4 shrink-0 text-[var(--color-ink-faint)]" />
+              <a href={telHref()} className="tabular transition-colors hover:text-[var(--color-ink)]">
                 {SITE.phone}
               </a>
             </li>
-            <li className="flex items-start gap-2">
-              <Mail className="mt-0.5 size-4 shrink-0" />
-              <a href={`mailto:${SITE.email}`} className="transition hover:text-gold">
+            <li className="flex items-start gap-2.5">
+              <Mail className="mt-0.5 size-4 shrink-0 text-[var(--color-ink-faint)]" />
+              <a
+                href={`mailto:${SITE.email}`}
+                className="transition-colors hover:text-[var(--color-ink)]"
+              >
                 {SITE.email}
               </a>
             </li>
           </ul>
-        </div>
 
-        <div>
-          <h3 className="text-xs font-bold tracking-widest text-white">FOLLOW</h3>
-          <div className="mt-4 flex gap-3">
-            <span className="grid size-9 place-items-center rounded-full bg-white/10">
-              <Facebook className="size-4" />
-            </span>
-            <span className="grid size-9 place-items-center rounded-full bg-white/10">
-              <Instagram className="size-4" />
-            </span>
-          </div>
-          <Link to="/admin" className="mt-5 inline-block text-sm transition hover:text-gold">
+          <Link
+            to="/admin"
+            className="mt-5 inline-block py-2 text-[13px] text-[var(--color-ink-faint)] transition-colors hover:text-[var(--color-ink)]"
+          >
             Staff login
           </Link>
         </div>
       </div>
 
-      <div className="border-t border-white/10">
-        <div className="container-page py-5 text-xs">
-          © {new Date().getFullYear()} {SITE.name}. All rights reserved.
+      <div className="border-t border-[var(--color-hairline)]">
+        <div className="container-page flex flex-wrap items-center justify-between gap-3 py-6 text-[12px] text-[var(--color-ink-faint)]">
+          <p>
+            © {new Date().getFullYear()} {SITE.name}. All rights reserved.
+          </p>
+          <p>Prices shown include the 20% storewide discount.</p>
         </div>
       </div>
     </footer>

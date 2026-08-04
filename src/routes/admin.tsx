@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { ImagePlus, LogOut, Plus, Trash2, X } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
@@ -9,21 +10,30 @@ import { CATEGORIES } from "@/lib/catalog";
 import type { ProductRow } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
 import { SITE } from "@/lib/site";
+import { EASE_OUT, springSoft } from "@/lib/motion";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
+const field =
+  "w-full rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-4 py-3 text-[14px] text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-ink-faint)] focus:border-[var(--color-accent)]";
+
+const label = "mb-2 block text-[12px] font-medium text-[var(--color-ink-dim)]";
+
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-sky/40">
-      <header className="bg-navy text-white">
-        <div className="container-page flex items-center justify-between py-4">
-          <Link to="/" className="rounded-xl bg-white p-1.5">
-            <img src="/brand/nexa-logo.png" alt={SITE.name} className="size-8 object-contain" />
+    <div className="min-h-dvh">
+      <header className="border-b border-[var(--color-hairline)]">
+        <div className="container-page flex h-16 items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <span className="grid size-8 place-items-center rounded-lg bg-[var(--color-ink)] text-[13px] font-bold text-[#08090a]">
+              N
+            </span>
+            <span className="text-[15px] font-semibold tracking-[-0.02em]">Nexa</span>
           </Link>
-          <span className="font-display font-bold text-gold">Admin</span>
+          <span className="eyebrow">Admin</span>
         </div>
       </header>
-      <div className="container-page py-10">{children}</div>
+      <div className="container-page py-12 md:py-16">{children}</div>
     </div>
   );
 }
@@ -44,7 +54,7 @@ function Admin() {
   if (!ready) {
     return (
       <Shell>
-        <p className="text-center text-muted-foreground">Loading…</p>
+        <p className="text-center text-[14px] text-[var(--color-ink-faint)]">Loading…</p>
       </Shell>
     );
   }
@@ -56,9 +66,6 @@ function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-
-  const field =
-    "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-electric";
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -83,46 +90,68 @@ function SignIn() {
 
   return (
     <Shell>
-      <div className="mx-auto max-w-md rounded-3xl border border-border bg-card p-8 shadow-sm">
-        <h1 className="font-display text-2xl text-navy">Staff sign in</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: EASE_OUT }}
+        className="mx-auto max-w-md rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface)] p-8"
+      >
+        <h1 className="text-2xl tracking-[-0.02em]">Staff sign in</h1>
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--color-ink-dim)]">
           Only {SITE.name} staff accounts can manage the catalogue.
         </p>
 
-        <form onSubmit={submit} className="mt-6 space-y-3">
-          <input
-            type="email"
-            required
-            placeholder="Email"
-            className={field}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            required
-            placeholder="Password"
-            className={field}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button
+        <form onSubmit={submit} className="mt-8 space-y-4">
+          <div>
+            <label htmlFor="admin-email" className={label}>
+              Email
+            </label>
+            <input
+              id="admin-email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="you@nexagadgets.com"
+              className={field}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="admin-password" className={label}>
+              Password
+            </label>
+            <input
+              id="admin-password"
+              type="password"
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className={field}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <motion.button
             type="submit"
             disabled={busy}
-            className="w-full rounded-xl bg-navy py-3 font-bold text-white transition hover:brightness-110 disabled:opacity-60"
+            whileHover={busy ? undefined : { scale: 1.01 }}
+            whileTap={busy ? undefined : { scale: 0.99 }}
+            transition={springSoft}
+            className="w-full rounded-full bg-[var(--color-ink)] py-3.5 text-[14px] font-semibold text-[#08090a] transition-colors hover:bg-white disabled:opacity-50"
           >
             {busy ? "Signing in…" : "Sign in"}
-          </button>
+          </motion.button>
         </form>
 
         <button
           type="button"
           onClick={google}
-          className="mt-3 w-full rounded-xl border border-border py-3 font-semibold text-navy transition hover:border-electric"
+          className="mt-3 w-full rounded-full border border-[var(--color-hairline-strong)] py-3.5 text-[14px] font-medium transition-colors hover:bg-white/[0.04]"
         >
           Continue with Google
         </button>
-      </div>
+      </motion.div>
     </Shell>
   );
 }
@@ -216,9 +245,7 @@ function Dashboard() {
         const existing = f.images.split(",").map((s) => s.trim()).filter(Boolean);
         return { ...f, images: [...existing, ...uploaded].join(", ") };
       });
-      toast.success(
-        uploaded.length > 1 ? `${uploaded.length} images uploaded` : "Image uploaded",
-      );
+      toast.success(uploaded.length > 1 ? `${uploaded.length} images uploaded` : "Image uploaded");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Image upload failed");
     } finally {
@@ -234,197 +261,290 @@ function Dashboard() {
     });
   };
 
-  const field = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm";
-
   return (
     <Shell>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl text-navy">Product catalogue</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="text-3xl tracking-[-0.03em]">Product catalogue</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-ink-dim)]">
             Add, photograph and remove the products shown on the storefront.
           </p>
         </div>
         <button
           type="button"
           onClick={() => supabase.auth.signOut()}
-          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition hover:border-electric"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--color-hairline-strong)] px-5 py-2.5 text-[13px] font-medium transition-colors hover:bg-white/[0.04]"
         >
           <LogOut className="size-4" />
           Sign out
         </button>
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          createProduct.mutate();
-        }}
-        className="mt-8 rounded-3xl border border-border bg-card p-6"
-      >
-        <h2 className="font-display text-lg text-navy-deep">Add a product</h2>
+      <div className="mt-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            createProduct.mutate();
+          }}
+          className="rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface)] p-7"
+        >
+          <h2 className="text-lg tracking-[-0.02em]">Add a product</h2>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <input
-            required
-            placeholder="Product name"
-            className={field}
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <input
-            placeholder="Slug (optional — generated from the name)"
-            className={field}
-            value={form.slug}
-            onChange={(e) => setForm({ ...form, slug: e.target.value })}
-          />
-          <select
-            className={field}
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <input
-            placeholder="Brand"
-            className={field}
-            value={form.brand}
-            onChange={(e) => setForm({ ...form, brand: e.target.value })}
-          />
-          <input
-            type="number"
-            min={0}
-            required
-            placeholder="Price (USD)"
-            className={field}
-            value={form.price}
-            onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-          />
-          <input
-            type="number"
-            min={0}
-            placeholder="Original price (optional)"
-            className={field}
-            value={form.original_price ?? ""}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                original_price: e.target.value ? Number(e.target.value) : null,
-              })
-            }
-          />
+          <div className="mt-6 grid gap-5 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label htmlFor="p-name" className={label}>
+                Product name
+              </label>
+              <input
+                id="p-name"
+                required
+                placeholder="MacBook Air 13&quot; M3"
+                className={field}
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
 
-          <div className="md:col-span-2">
-            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Product images
-            </label>
-            <label
-              htmlFor="product-image-upload"
-              className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-3 py-4 text-sm text-muted-foreground hover:border-electric hover:text-electric ${
-                uploadingImages ? "pointer-events-none opacity-60" : ""
-              }`}
-            >
-              <ImagePlus className="size-4" />
-              {uploadingImages ? "Uploading..." : "Click to upload image(s)"}
-            </label>
-            <input
-              id="product-image-upload"
-              type="file"
-              accept="image/*"
-              multiple
-              disabled={uploadingImages}
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-            {currentImages.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-3">
-                {currentImages.map((url) => (
-                  <div key={url} className="relative">
-                    <img
-                      src={url}
-                      alt=""
-                      className="size-16 rounded-lg border border-border object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(url)}
-                      className="absolute -right-1.5 -top-1.5 rounded-full bg-destructive p-0.5 text-white"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </div>
+            <div>
+              <label htmlFor="p-slug" className={label}>
+                Slug
+              </label>
+              <input
+                id="p-slug"
+                placeholder="Generated from the name"
+                className={field}
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="p-category" className={label}>
+                Category
+              </label>
+              <select
+                id="p-category"
+                className={field}
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.slug} value={c.slug} className="bg-[var(--color-canvas)]">
+                    {c.name}
+                  </option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="p-brand" className={label}>
+                Brand
+              </label>
+              <input
+                id="p-brand"
+                placeholder="Apple"
+                className={field}
+                value={form.brand}
+                onChange={(e) => setForm({ ...form, brand: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="p-price" className={label}>
+                  Price (USD)
+                </label>
+                <input
+                  id="p-price"
+                  type="number"
+                  min={0}
+                  required
+                  className={`${field} tabular`}
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+                />
               </div>
-            )}
+              <div>
+                <label htmlFor="p-was" className={label}>
+                  Was
+                </label>
+                <input
+                  id="p-was"
+                  type="number"
+                  min={0}
+                  placeholder="Optional"
+                  className={`${field} tabular`}
+                  value={form.original_price ?? ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      original_price: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="sm:col-span-2">
+              <span className={label}>Product images</span>
+              <label
+                htmlFor="product-image-upload"
+                className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-canvas)] px-4 py-8 text-center text-[13px] text-[var(--color-ink-dim)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-ink)] ${
+                  uploadingImages ? "pointer-events-none opacity-60" : ""
+                }`}
+              >
+                <ImagePlus className="size-5" />
+                {uploadingImages ? "Uploading…" : "Click to upload image(s)"}
+                <span className="text-[11px] text-[var(--color-ink-faint)]">
+                  PNG or JPG, multiple allowed
+                </span>
+              </label>
+              <input
+                id="product-image-upload"
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={uploadingImages}
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+
+              <AnimatePresence mode="popLayout">
+                {currentImages.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4 flex flex-wrap gap-3"
+                  >
+                    {currentImages.map((url) => (
+                      <motion.div
+                        key={url}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={springSoft}
+                        className="relative"
+                      >
+                        <img
+                          src={url}
+                          alt=""
+                          className="size-20 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-tile)] object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(url)}
+                          aria-label="Remove image"
+                          className="absolute -right-2 -top-2 grid size-6 place-items-center rounded-full bg-[var(--color-sale)] text-[#08090a] transition-transform hover:scale-110"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="p-short" className={label}>
+                Short description
+              </label>
+              <input
+                id="p-short"
+                placeholder="One line shown on the product card"
+                className={field}
+                value={form.short_description}
+                onChange={(e) => setForm({ ...form, short_description: e.target.value })}
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="p-desc" className={label}>
+                Full description
+              </label>
+              <textarea
+                id="p-desc"
+                rows={4}
+                placeholder="Shown on the product page"
+                className={field}
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
           </div>
 
-          <input
-            placeholder="Short description"
-            className={`${field} md:col-span-2`}
-            value={form.short_description}
-            onChange={(e) => setForm({ ...form, short_description: e.target.value })}
-          />
-          <textarea
-            placeholder="Full description"
-            rows={3}
-            className={`${field} md:col-span-2`}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-        </div>
+          <motion.button
+            type="submit"
+            disabled={createProduct.isPending || uploadingImages}
+            whileHover={createProduct.isPending ? undefined : { scale: 1.01 }}
+            whileTap={createProduct.isPending ? undefined : { scale: 0.99 }}
+            transition={springSoft}
+            className="mt-7 inline-flex items-center gap-2 rounded-full bg-[var(--color-ink)] px-6 py-3.5 text-[14px] font-semibold text-[#08090a] transition-colors hover:bg-white disabled:opacity-50"
+          >
+            <Plus className="size-4" />
+            {createProduct.isPending ? "Saving…" : "Add product"}
+          </motion.button>
+        </form>
 
-        <button
-          type="submit"
-          disabled={createProduct.isPending || uploadingImages}
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-60"
-        >
-          <Plus className="size-4" />
-          {createProduct.isPending ? "Saving…" : "Add product"}
-        </button>
-      </form>
+        <div className="rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface)] p-7 lg:sticky lg:top-8">
+          <h2 className="text-lg tracking-[-0.02em]">
+            Products{" "}
+            {products.length > 0 && (
+              <span className="tabular text-[var(--color-ink-faint)]">({products.length})</span>
+            )}
+          </h2>
 
-      <div className="mt-8 rounded-3xl border border-border bg-card p-6">
-        <h2 className="font-display text-lg text-navy-deep">
-          Products {products.length > 0 && `(${products.length})`}
-        </h2>
-
-        {isLoading ? (
-          <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
-        ) : products.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">
-            No products in the database yet — the storefront is showing the seed catalogue.
-          </p>
-        ) : (
-          <ul className="mt-4 divide-y divide-border">
-            {products.map((p) => (
-              <li key={p.id} className="flex items-center gap-4 py-3">
-                <img
-                  src={p.images?.[0] ?? "/brand/nexa-logo.png"}
-                  alt=""
-                  className="size-12 rounded-lg border border-border object-cover"
+          {isLoading ? (
+            <div className="mt-6 space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-16 animate-pulse rounded-xl bg-[var(--color-surface-2)]"
                 />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.brand} · {formatPrice(p.price)}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => deleteProduct.mutate(p.id)}
-                  aria-label={`Delete ${p.name}`}
-                  className="rounded-lg p-2 text-destructive transition hover:bg-destructive/10"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <p className="mt-6 text-[13px] leading-relaxed text-[var(--color-ink-faint)]">
+              No products in the database yet — the storefront is showing the seed catalogue.
+            </p>
+          ) : (
+            <ul className="mt-5 divide-y divide-[var(--color-hairline)]">
+              <AnimatePresence initial={false}>
+                {products.map((p) => (
+                  <motion.li
+                    key={p.id}
+                    layout
+                    exit={{ opacity: 0, x: -12 }}
+                    transition={springSoft}
+                    className="flex items-center gap-4 py-3"
+                  >
+                    <img
+                      src={p.images?.[0] ?? "/brand/nexa-logo.png"}
+                      alt=""
+                      className="size-11 shrink-0 rounded-lg border border-[var(--color-hairline)] bg-[var(--color-tile)] object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-medium">{p.name}</p>
+                      <p className="tabular mt-0.5 text-[12px] text-[var(--color-ink-faint)]">
+                        {p.brand} · {formatPrice(p.price)}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => deleteProduct.mutate(p.id)}
+                      aria-label={`Delete ${p.name}`}
+                      className="grid size-9 shrink-0 place-items-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-sale)]/12 hover:text-[var(--color-sale)]"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+          )}
+        </div>
       </div>
     </Shell>
   );

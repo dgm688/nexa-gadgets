@@ -12,7 +12,18 @@ const remainingUntil = (target: number): Remaining => {
   };
 };
 
-export function Countdown({ endsAt, tone = "light" }: { endsAt: string; tone?: "light" | "dark" }) {
+/**
+ * Deliberately quiet. The old treatment was a large glass card of oversized
+ * digits that out-shouted the headline; urgency reads better as precise, small
+ * type. Tabular numerals stop the row reflowing every second.
+ */
+export function Countdown({
+  endsAt,
+  size = "sm",
+}: {
+  endsAt: string;
+  size?: "sm" | "lg";
+}) {
   const target = new Date(endsAt).getTime();
   const [left, setLeft] = useState(() => remainingUntil(target));
 
@@ -22,32 +33,37 @@ export function Countdown({ endsAt, tone = "light" }: { endsAt: string; tone?: "
   }, [target]);
 
   const cells: [number, string][] = [
-    [left.days, "DAYS"],
-    [left.hours, "HOURS"],
-    [left.mins, "MINS"],
-    [left.secs, "SECS"],
+    [left.days, "d"],
+    [left.hours, "h"],
+    [left.mins, "m"],
+    [left.secs, "s"],
   ];
 
-  const pill =
-    tone === "light"
-      ? "bg-white/15 text-white"
-      : "bg-navy text-white";
+  if (size === "sm") {
+    return (
+      <span className="tabular inline-flex items-baseline gap-1.5 font-mono text-[13px] text-[var(--color-ink)]">
+        {cells.map(([v, l]) => (
+          <span key={l}>
+            {String(v).padStart(2, "0")}
+            <span className="text-[var(--color-ink-faint)]">{l}</span>
+          </span>
+        ))}
+      </span>
+    );
+  }
 
   return (
     <div className="flex gap-3">
-      {cells.map(([value, label]) => (
-        <div key={label} className="text-center">
-          <div
-            className={`flex h-14 w-16 items-center justify-center rounded-2xl text-2xl font-bold tabular-nums ${pill}`}
-          >
-            {String(value).padStart(2, "0")}
+      {cells.map(([v, l]) => (
+        <div
+          key={l}
+          className="min-w-[68px] rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface)] px-3 py-3 text-center"
+        >
+          <div className="tabular font-mono text-2xl font-medium tracking-tight">
+            {String(v).padStart(2, "0")}
           </div>
-          <div
-            className={`mt-1.5 text-[10px] font-semibold tracking-widest ${
-              tone === "light" ? "text-white/70" : "text-muted-foreground"
-            }`}
-          >
-            {label}
+          <div className="mt-1 text-[10px] uppercase tracking-widest text-[var(--color-ink-faint)]">
+            {l === "d" ? "days" : l === "h" ? "hrs" : l === "m" ? "min" : "sec"}
           </div>
         </div>
       ))}
