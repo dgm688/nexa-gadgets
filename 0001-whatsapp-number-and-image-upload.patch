@@ -1,0 +1,163 @@
+From e752acc869c81114a27cbc533b0ba0b9b910bf11 Mon Sep 17 00:00:00 2001
+From: Waltern Tech <dev@walterntech.com>
+Date: Tue, 4 Aug 2026 07:57:17 +0000
+Subject: [PATCH] Update WhatsApp click-to-chat number; add image upload to
+ admin product form
+
+---
+ src/lib/site.ts                               |  4 +-
+ src/routes/admin.tsx                          | 87 ++++++++++++++++++-
+ .../20260804160000_update_whatsapp_number.sql | 12 +++
+ 3 files changed, 99 insertions(+), 4 deletions(-)
+ create mode 100644 supabase/migrations/20260804160000_update_whatsapp_number.sql
+
+diff --git a/src/lib/site.ts b/src/lib/site.ts
+index ec913e1..424e145 100644
+--- a/src/lib/site.ts
++++ b/src/lib/site.ts
+@@ -3,10 +3,10 @@
+ export const SITE = {
+   name: "Nexa Gadgets",
+   tagline: "Premium tech, delivered same day from a store in your state",
+-  phone: "+1 (888) 555-0142",
++  phone: "+1 507-817-9129",
+   email: "sales@nexagadgets.com",
+   address: "Retail locations in all 50 states",
+-  whatsappFallback: "18885550142",
++  whatsappFallback: "15078179129",
+ } as const;
+ 
+ /** Storewide flash sale: 20% off everything, running for two months. */
+diff --git a/src/routes/admin.tsx b/src/routes/admin.tsx
+index 4bc2e25..2c2be28 100644
+--- a/src/routes/admin.tsx
++++ b/src/routes/admin.tsx
+@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
+ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+ import type { Session } from "@supabase/supabase-js";
+ import { toast } from "sonner";
+-import { LogOut, Plus, Trash2 } from "lucide-react";
++import { ImagePlus, LogOut, Plus, Trash2, X } from "lucide-react";
+ import { supabase } from "@/integrations/supabase/client";
+ import { lovable } from "@/integrations/lovable/index";
+ import {
+@@ -271,6 +271,47 @@ function Dashboard() {
+ 
+   const field = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm";
+ 
++  const [uploadingImages, setUploadingImages] = useState(false);
++
++  const currentImages = form.images
++    .split(",")
++    .map((s) => s.trim())
++    .filter(Boolean);
++
++  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
++    const files = e.target.files;
++    if (!files || files.length === 0) return;
++    setUploadingImages(true);
++    try {
++      const uploaded: string[] = [];
++      for (const file of Array.from(files)) {
++        const ext = file.name.split(".").pop() || "jpg";
++        const path = `${crypto.randomUUID()}.${ext}`;
++        const { error } = await supabase.storage.from("product-images").upload(path, file);
++        if (error) throw error;
++        const { data } = supabase.storage.from("product-images").getPublicUrl(path);
++        uploaded.push(data.publicUrl);
++      }
++      setForm((f) => ({
++        ...f,
++        images: [...currentImages, ...uploaded].join(", "),
++      }));
++      toast.success(uploaded.length > 1 ? `${uploaded.length} images uploaded` : "Image uploaded");
++    } catch (err) {
++      toast.error(err instanceof Error ? err.message : "Image upload failed");
++    } finally {
++      setUploadingImages(false);
++      e.target.value = "";
++    }
++  };
++
++  const removeImage = (url: string) => {
++    setForm((f) => ({
++      ...f,
++      images: currentImages.filter((img) => img !== url).join(", "),
++    }));
++  };
++
+   return (
+     <Shell>
+       <div className="flex flex-wrap items-center justify-between gap-3">
+@@ -345,7 +386,49 @@ function Dashboard() {
+               <input placeholder="Brand" className={field} value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
+               <input type="number" min={0} required placeholder="Price (USD)" className={field} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+               <input type="number" min={0} placeholder="Original price (optional)" className={field} value={form.original_price ?? ""} onChange={(e) => setForm({ ...form, original_price: e.target.value ? Number(e.target.value) : null })} />
+-              <input placeholder="Image paths, comma separated" className={field} value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} />
++              <div className="md:col-span-2">
++                <label className="mb-1 block text-xs font-semibold text-muted-foreground">
++                  Product images
++                </label>
++                <label
++                  htmlFor="product-image-upload"
++                  className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-3 py-4 text-sm text-muted-foreground hover:border-electric hover:text-electric ${
++                    uploadingImages ? "pointer-events-none opacity-60" : ""
++                  }`}
++                >
++                  <ImagePlus className="size-4" />
++                  {uploadingImages ? "Uploading..." : "Click to upload image(s)"}
++                </label>
++                <input
++                  id="product-image-upload"
++                  type="file"
++                  accept="image/*"
++                  multiple
++                  disabled={uploadingImages}
++                  onChange={handleImageUpload}
++                  className="hidden"
++                />
++                {currentImages.length > 0 && (
++                  <div className="mt-3 flex flex-wrap gap-3">
++                    {currentImages.map((url) => (
++                      <div key={url} className="relative">
++                        <img
++                          src={url}
++                          alt=""
++                          className="size-16 rounded-lg border border-border object-cover"
++                        />
++                        <button
++                          type="button"
++                          onClick={() => removeImage(url)}
++                          className="absolute -right-1.5 -top-1.5 rounded-full bg-destructive p-0.5 text-white"
++                        >
++                          <X className="size-3" />
++                        </button>
++                      </div>
++                    ))}
++                  </div>
++                )}
++              </div>
+               <input placeholder="Short description" className={`${field} md:col-span-2`} value={form.short_description} onChange={(e) => setForm({ ...form, short_description: e.target.value })} />
+               <textarea placeholder="Full description" rows={3} className={`${field} md:col-span-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+             </div>
+diff --git a/supabase/migrations/20260804160000_update_whatsapp_number.sql b/supabase/migrations/20260804160000_update_whatsapp_number.sql
+new file mode 100644
+index 0000000..69c8248
+--- /dev/null
++++ b/supabase/migrations/20260804160000_update_whatsapp_number.sql
+@@ -0,0 +1,12 @@
++-- Update the site-wide WhatsApp click-to-chat number used by "Order now" buttons
++UPDATE public.site_settings SET
++  whatsapp_number = '15078179129',
++  phone = '+1 507-817-9129',
++  updated_at = now()
++WHERE id = 1;
++
++-- Ensure the product-images storage bucket exists and is public,
++-- so admin-uploaded product photos resolve via a public URL on the storefront.
++INSERT INTO storage.buckets (id, name, public)
++VALUES ('product-images', 'product-images', true)
++ON CONFLICT (id) DO UPDATE SET public = true;
+-- 
+2.43.0
+
