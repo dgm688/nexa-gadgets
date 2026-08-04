@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens lifted verbatim from the deployed Nexa Gadgets site
+ * (read off :root at runtime), so the rebuild renders the same palette.
+ */
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+
+  --radius: 0.875rem;
+
+  --color-background: oklch(99.5% 0.003 240);
+  --color-foreground: oklch(29% 0.06 254);
+  --color-card: oklch(100% 0 0);
+  --color-card-foreground: oklch(29% 0.06 254);
+  --color-popover: oklch(100% 0 0);
+  --color-popover-foreground: oklch(12.9% 0.042 264.695);
+
+  --color-primary: oklch(45% 0.104 253);
+  --color-primary-foreground: oklch(100% 0 0);
+  --color-secondary: oklch(96.8% 0.012 240);
+  --color-secondary-foreground: oklch(36% 0.095 254);
+
+  --color-muted: oklch(96.8% 0.012 240);
+  --color-muted-foreground: oklch(54.5% 0.032 250);
+  --color-accent: oklch(94.5% 0.026 240);
+  --color-accent-foreground: oklch(36% 0.095 254);
+
+  --color-destructive: oklch(58.6% 0.222 17.6);
+  --color-destructive-foreground: oklch(98.4% 0.003 247.858);
+
+  --color-border: oklch(92.2% 0.014 245);
+  --color-input: oklch(92.2% 0.014 245);
+  --color-ring: oklch(60% 0.148 246);
+
+  /* Brand accents */
+  --color-navy: oklch(45% 0.104 253);
+  --color-navy-deep: oklch(36% 0.095 254);
+  --color-electric: oklch(60% 0.148 246);
+  --color-gold: oklch(89.2% 0.102 90.4);
+  --color-sky: oklch(94.5% 0.026 240);
+  --color-pink: oklch(83.3% 0.131 330.6);
+  --color-whatsapp: oklch(76.1% 0.201 149.7);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1rem;
+}

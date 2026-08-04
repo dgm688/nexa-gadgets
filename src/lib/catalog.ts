@@ -1,0 +1,492 @@
+/**
+ * Seed catalogue for the storefront.
+ *
+ * The admin dashboard writes to the Supabase `products` table; when Supabase is
+ * configured the storefront prefers those rows and falls back to this list, so
+ * the site renders correctly before any backend is wired up.
+ */
+
+export type CategorySlug =
+  | "mobile-phones"
+  | "computers"
+  | "tv-audio-systems"
+  | "audio-music"
+  | "tablets-e-readers"
+  | "wearable-technology"
+  | "gaming"
+  | "photography-videography"
+  | "safety-security"
+  | "power-charging"
+  | "other-electronics";
+
+export type Category = {
+  slug: CategorySlug;
+  name: string;
+  blurb: string;
+};
+
+export type Spec = { label: string; value: string };
+
+export type Product = {
+  slug: string;
+  name: string;
+  brand: string;
+  category: CategorySlug;
+  shortDescription: string;
+  description: string;
+  price: number;
+  originalPrice: number;
+  images: string[];
+  specs: Spec[];
+  isNew: boolean;
+  featured: boolean;
+  condition: "new" | "certified-pre-owned";
+  inStock: boolean;
+};
+
+export const CATEGORIES: Category[] = [
+  { slug: "mobile-phones", name: "Mobile Phones", blurb: "Smartphones · Feature Phones · Phone Accessories" },
+  { slug: "computers", name: "Computers", blurb: "Laptops · Desktops · All-in-One PCs" },
+  { slug: "tv-audio-systems", name: "TV & Audio Systems", blurb: "Televisions · QLED · OLED" },
+  { slug: "audio-music", name: "Audio & Music", blurb: "Portable Speakers · Home Speakers · Headphones" },
+  { slug: "tablets-e-readers", name: "Tablets & E-Readers", blurb: "Android Tablets · Windows Tablets · Apple iPads" },
+  { slug: "wearable-technology", name: "Wearable Technology", blurb: "Smartwatches · Fitness Trackers" },
+  { slug: "gaming", name: "Gaming", blurb: "Gaming Consoles · VR Headsets · Gaming Accessories" },
+  { slug: "photography-videography", name: "Photography & Videography", blurb: "Digital Cameras · Instant Cameras · Camera Accessories" },
+  { slug: "safety-security", name: "Safety & Security", blurb: "Smart Locks · Video Doorbells · CCTV & Home Monitoring" },
+  { slug: "power-charging", name: "Power & Charging", blurb: "Power Banks · Portable Power Stations · Charging Stations" },
+  { slug: "other-electronics", name: "Other Electronics", blurb: "Assorted" },
+];
+
+export const PRODUCTS: Product[] = [
+  {
+    slug: "hisense-43-smart-led-a6k",
+    name: "Hisense 43\" Smart LED TV A6K",
+    brand: "Hisense",
+    category: "tv-audio-systems",
+    shortDescription: "Compact 43-inch smart TV for bedrooms.",
+    description: "Full HD smart LED television with VIDAA OS, Netflix and YouTube built in.",
+    price: 150,
+    originalPrice: 250,
+    images: ["/products/tv-hisense.jpg"],
+    specs: [
+      { label: "Panel", value: "LED" },
+      { label: "Smart OS", value: "VIDAA" },
+      { label: "Warranty", value: "1 year" },
+      { label: "Resolution", value: "Full HD" },
+      { label: "Screen size", value: "43 inches" },
+    ],
+    isNew: false,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "lg-55-oled-evo-c4",
+    name: "LG 55\" OLED evo C4",
+    brand: "LG",
+    category: "tv-audio-systems",
+    shortDescription: "Self-lit OLED pixels with perfect blacks.",
+    description: "LG OLED evo C4 with a9 processor, 144Hz gaming support and Dolby Vision.",
+    price: 600,
+    originalPrice: 1000,
+    images: ["/products/tv-lg.jpg"],
+    specs: [
+      { label: "HDR", value: "Dolby Vision" },
+      { label: "Panel", value: "OLED evo" },
+      { label: "Warranty", value: "2 years" },
+      { label: "Screen size", value: "55 inches" },
+      { label: "Refresh rate", value: "144Hz" },
+    ],
+    isNew: true,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "iphone-15-pro-max-256gb",
+    name: "iPhone 15 Pro Max 256GB",
+    brand: "Apple",
+    category: "mobile-phones",
+    shortDescription: "Titanium build, A17 Pro chip.",
+    description: "iPhone 15 Pro Max with 6.7-inch Super Retina XDR display, 48MP main camera and USB-C.",
+    price: 575,
+    originalPrice: 959,
+    images: ["/products/phone-iphone.jpg"],
+    specs: [
+      { label: "Chip", value: "A17 Pro" },
+      { label: "Camera", value: "48MP triple" },
+      { label: "Battery", value: "4441mAh" },
+      { label: "Display", value: "6.7 inch OLED" },
+      { label: "Storage", value: "256GB" },
+    ],
+    isNew: true,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "samsung-galaxy-s24-ultra",
+    name: "Samsung Galaxy S24 Ultra",
+    brand: "Samsung",
+    category: "mobile-phones",
+    shortDescription: "Built-in S Pen and 200MP camera.",
+    description: "Galaxy S24 Ultra with Snapdragon 8 Gen 3, titanium frame and Galaxy AI features.",
+    price: 480,
+    originalPrice: 600,
+    images: ["/products/phone-samsung.jpg"],
+    specs: [
+      { label: "Chip", value: "Snapdragon 8 Gen 3" },
+      { label: "Camera", value: "200MP quad" },
+      { label: "Battery", value: "5000mAh" },
+      { label: "Display", value: "6.8 inch AMOLED" },
+      { label: "Storage", value: "256GB / 512GB" },
+    ],
+    isNew: true,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "xiaomi-redmi-note-13-pro",
+    name: "Xiaomi Redmi Note 13 Pro",
+    brand: "Xiaomi",
+    category: "mobile-phones",
+    shortDescription: "Great value 120Hz AMOLED phone.",
+    description: "Redmi Note 13 Pro with 200MP camera, 67W fast charging and a 120Hz AMOLED screen.",
+    price: 239,
+    originalPrice: 299,
+    images: ["/products/phone-xiaomi.jpg"],
+    specs: [
+      { label: "Camera", value: "200MP" },
+      { label: "Display", value: "6.67 inch AMOLED" },
+      { label: "Storage", value: "256GB" },
+      { label: "Charging", value: "67W" },
+    ],
+    isNew: false,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "hp-pavilion-15-i5",
+    name: "HP Pavilion 15 Core i5 12th Gen",
+    brand: "HP",
+    category: "computers",
+    shortDescription: "Everyday laptop for work and study.",
+    description: "HP Pavilion 15 with Intel Core i5, 8GB RAM and 512GB SSD storage.",
+    price: 330,
+    originalPrice: 559,
+    images: ["/products/laptop-hp.jpg"],
+    specs: [
+      { label: "RAM", value: "8GB" },
+      { label: "Display", value: "15.6 inch FHD" },
+      { label: "Storage", value: "512GB SSD" },
+      { label: "Warranty", value: "1 year" },
+      { label: "Processor", value: "Intel Core i5 12th Gen" },
+    ],
+    isNew: false,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "samsung-65-qled-4k-q80d",
+    name: "Samsung 65\" QLED 4K Smart TV Q80D",
+    brand: "Samsung",
+    category: "tv-audio-systems",
+    shortDescription: "Quantum Dot 4K panel with Dolby Atmos sound.",
+    description: "A 65-inch Quantum Dot display with 4K upscaling, 120Hz motion and built-in streaming apps. Ideal for family living rooms and gaming.",
+    price: 600,
+    originalPrice: 1000,
+    images: ["/products/tv-samsung.jpg"],
+    specs: [
+      { label: "Panel", value: "QLED" },
+      { label: "Smart OS", value: "Tizen" },
+      { label: "Warranty", value: "2 years" },
+      { label: "Resolution", value: "4K UHD 3840x2160" },
+      { label: "Screen size", value: "65 inches" },
+      { label: "Refresh rate", value: "120Hz" },
+    ],
+    isNew: false,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "tcl-75-qled-google-tv",
+    name: "TCL 75\" QLED Google TV",
+    brand: "TCL",
+    category: "tv-audio-systems",
+    shortDescription: "Big-screen QLED with Google TV.",
+    description: "75-inch QLED panel with Google TV, hands-free voice search and HDR10+.",
+    price: 325,
+    originalPrice: 540,
+    images: ["/products/tv-tcl.jpg"],
+    specs: [
+      { label: "Panel", value: "QLED" },
+      { label: "Smart OS", value: "Google TV" },
+      { label: "Warranty", value: "2 years" },
+      { label: "Screen size", value: "75 inches" },
+    ],
+    isNew: true,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "jbl-bar-51-soundbar",
+    name: "JBL Bar 5.1 Soundbar",
+    brand: "JBL",
+    category: "tv-audio-systems",
+    shortDescription: "Wireless subwoofer, room-filling sound.",
+    description: "5.1 channel soundbar with detachable wireless surround speakers and 10-inch subwoofer.",
+    price: 240,
+    originalPrice: 399,
+    images: ["/products/soundbar-jbl.jpg"],
+    specs: [
+      { label: "Power", value: "550W" },
+      { label: "Channels", value: "5.1" },
+      { label: "Warranty", value: "1 year" },
+      { label: "Connectivity", value: "HDMI eARC, Bluetooth" },
+    ],
+    isNew: false,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "macbook-air-13-m3",
+    name: "MacBook Air 13\" M3 8GB/256GB",
+    brand: "Apple",
+    category: "computers",
+    shortDescription: "Fanless, all-day battery.",
+    description: "MacBook Air with the M3 chip, Liquid Retina display and up to 18 hours of battery life.",
+    price: 440,
+    originalPrice: 879,
+    images: ["/products/laptop-macbook.jpg"],
+    specs: [
+      { label: "RAM", value: "8GB" },
+      { label: "Chip", value: "Apple M3" },
+      { label: "Display", value: "13.6 inch Liquid Retina" },
+      { label: "Storage", value: "256GB SSD" },
+      { label: "Warranty", value: "1 year" },
+    ],
+    isNew: true,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "hikvision-4-camera-cctv-kit",
+    name: "Hikvision 4-Camera CCTV Kit",
+    brand: "Hikvision",
+    category: "safety-security",
+    shortDescription: "Full home CCTV kit with installation.",
+    description: "Hikvision 1080p 4-camera CCTV kit with DVR, 1TB storage and mobile app viewing.",
+    price: 319,
+    originalPrice: 399,
+    images: ["/products/cctv-hikvision.jpg"],
+    specs: [
+      { label: "App", value: "Hik-Connect" },
+      { label: "Cameras", value: "4x 1080p" },
+      { label: "Storage", value: "1TB" },
+      { label: "Warranty", value: "1 year" },
+    ],
+    isNew: false,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "sony-wh1000xm5",
+    name: "Sony WH-1000XM5 Headphones",
+    brand: "Sony",
+    category: "audio-music",
+    shortDescription: "Best-in-class noise cancelling.",
+    description: "Sony WH-1000XM5 over-ear headphones with adaptive noise cancelling and 30-hour battery.",
+    price: 250,
+    originalPrice: 399,
+    images: ["/products/headphones-sony.jpg"],
+    specs: [
+      { label: "ANC", value: "Yes" },
+      { label: "Type", value: "Over-ear" },
+      { label: "Battery", value: "30 hours" },
+      { label: "Connectivity", value: "Bluetooth 5.2" },
+    ],
+    isNew: false,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "apple-watch-series-9-45mm",
+    name: "Apple Watch Series 9 45mm",
+    brand: "Apple",
+    category: "wearable-technology",
+    shortDescription: "Double tap gesture, brighter display.",
+    description: "Apple Watch Series 9 with S9 SiP, 2000-nit display and advanced health sensors.",
+    price: 210,
+    originalPrice: 343,
+    images: ["/products/watch-apple.jpg"],
+    specs: [
+      { label: "Case", value: "45mm aluminium" },
+      { label: "Display", value: "Always-On Retina" },
+      { label: "Water resistance", value: "50m" },
+    ],
+    isNew: false,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "apple-airpods-pro-2",
+    name: "Apple AirPods Pro 2 (USB-C)",
+    brand: "Apple",
+    category: "audio-music",
+    shortDescription: "Adaptive audio and USB-C charging.",
+    description: "AirPods Pro 2 with H2 chip, adaptive transparency and MagSafe USB-C case.",
+    price: 135,
+    originalPrice: 220,
+    images: ["/products/earbuds-airpods.jpg"],
+    specs: [
+      { label: "ANC", value: "Yes" },
+      { label: "Chip", value: "Apple H2" },
+      { label: "Battery", value: "6 hours (30 with case)" },
+    ],
+    isNew: true,
+    featured: true,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "jbl-flip-6",
+    name: "JBL Flip 6 Portable Speaker",
+    brand: "JBL",
+    category: "audio-music",
+    shortDescription: "Waterproof speaker with punchy bass.",
+    description: "JBL Flip 6 with IP67 waterproofing, 12-hour playtime and bold JBL Pro Sound.",
+    price: 103,
+    originalPrice: 129,
+    images: ["/products/speaker-jbl.jpg"],
+    specs: [
+      { label: "Power", value: "30W" },
+      { label: "Battery", value: "12 hours" },
+      { label: "Waterproof", value: "IP67" },
+      { label: "Connectivity", value: "Bluetooth 5.1" },
+    ],
+    isNew: true,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "ecoflow-river-2",
+    name: "EcoFlow River 2 Portable Power Station",
+    brand: "EcoFlow",
+    category: "power-charging",
+    shortDescription: "Backup power for outages.",
+    description: "EcoFlow River 2 with 256Wh LiFePO4 battery, 300W output and 60-minute recharge.",
+    price: 191,
+    originalPrice: 239,
+    images: ["/products/powerstation-ecoflow.jpg"],
+    specs: [
+      { label: "Output", value: "300W" },
+      { label: "Capacity", value: "256Wh" },
+      { label: "Recharge", value: "60 minutes" },
+    ],
+    isNew: true,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "ring-video-doorbell-2nd-gen",
+    name: "Ring Video Doorbell (2nd Gen)",
+    brand: "Ring",
+    category: "safety-security",
+    shortDescription: "See visitors from your phone.",
+    description: "Ring Video Doorbell with 1080p HD video, two-way talk and motion alerts.",
+    price: 79,
+    originalPrice: 99,
+    images: ["/products/doorbell-ring.jpg"],
+    specs: [
+      { label: "Audio", value: "Two-way talk" },
+      { label: "Power", value: "Battery or wired" },
+      { label: "Video", value: "1080p HD" },
+    ],
+    isNew: true,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "playstation-5-slim-disc",
+    name: "PlayStation 5 Slim Disc Edition",
+    brand: "Sony",
+    category: "gaming",
+    shortDescription: "Next-gen gaming with 4K output.",
+    description: "PS5 Slim disc edition with 1TB SSD, DualSense controller and ray-traced 4K gaming.",
+    price: 280,
+    originalPrice: 450,
+    images: ["/products/console-ps5.jpg"],
+    specs: [
+      { label: "Output", value: "4K 120Hz" },
+      { label: "Storage", value: "1TB SSD" },
+      { label: "Includes", value: "1 DualSense controller" },
+    ],
+    isNew: true,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "lg-24-fhd-ips-monitor",
+    name: "LG 24\" Full HD IPS Monitor",
+    brand: "LG",
+    category: "computers",
+    shortDescription: "Crisp IPS panel for work.",
+    description: "LG 24-inch Full HD IPS monitor with 75Hz refresh rate and AMD FreeSync.",
+    price: 103,
+    originalPrice: 129,
+    images: ["/products/monitor-lg.jpg"],
+    specs: [
+      { label: "Size", value: "24 inch" },
+      { label: "Panel", value: "IPS" },
+      { label: "Resolution", value: "1920x1080" },
+      { label: "Refresh rate", value: "75Hz" },
+    ],
+    isNew: false,
+    featured: false,
+    condition: "new",
+    inStock: true,
+  },
+  {
+    slug: "dell-latitude-7490-exuk",
+    name: "Dell Latitude 7490 Ex-UK Core i7",
+    brand: "Dell",
+    category: "computers",
+    shortDescription: "Refurbished business laptop, great value.",
+    description: "Ex-UK Dell Latitude 7490 with Core i7, 16GB RAM and 512GB SSD. Tested and certified.",
+    price: 230,
+    originalPrice: 379,
+    images: ["/products/laptop-dell.jpg"],
+    specs: [
+      { label: "RAM", value: "16GB" },
+      { label: "Storage", value: "512GB SSD" },
+      { label: "Warranty", value: "3 months" },
+      { label: "Condition", value: "Ex-UK, grade A" },
+      { label: "Processor", value: "Intel Core i7 8th Gen" },
+    ],
+    isNew: false,
+    featured: false,
+    condition: "certified-pre-owned",
+    inStock: true,
+  },
+];
+
+export const categoryBySlug = (slug: string): Category | undefined =>
+  CATEGORIES.find((c) => c.slug === slug);
+
+export const productsInCategory = (slug: string, all: Product[] = PRODUCTS): Product[] =>
+  all.filter((p) => p.category === slug);
