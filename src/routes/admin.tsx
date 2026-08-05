@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Session } from "@supabase/supabase-js";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { ImagePlus, LogOut, Plus, Trash2, X } from "lucide-react";
+import { Check, ImagePlus, LogOut, Pencil, Plus, Trash2, X } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/catalog";
 import type { ProductRow } from "@/lib/products";
@@ -161,6 +161,8 @@ function SignIn() {
   );
 }
 
+type SpecRow = { label: string; value: string };
+
 const emptyForm = {
   name: "",
   slug: "",
@@ -171,12 +173,58 @@ const emptyForm = {
   images: "",
   short_description: "",
   description: "",
+  is_new: false,
+  featured: false,
+  in_stock: true,
+  condition: "new" as "new" | "certified-pre-owned",
+  specs: [] as SpecRow[],
 };
+
+type FormState = typeof emptyForm;
+
+/** Turns a stored row back into form state for editing. */
+const formFromRow = (p: ProductRow): FormState => ({
+  name: p.name,
+  slug: p.slug,
+  category: p.category,
+  brand: p.brand ?? "",
+  price: Number(p.price),
+  original_price: p.original_price === null ? null : Number(p.original_price),
+  images: (p.images ?? []).join(", "),
+  short_description: p.short_description ?? "",
+  description: p.description ?? "",
+  is_new: p.is_new ?? false,
+  featured: p.featured ?? false,
+  in_stock: p.in_stock ?? true,
+  condition: p.condition === "certified-pre-owned" ? "certified-pre-owned" : "new",
+  specs: Array.isArray(p.specs) ? p.specs : [],
+});
+
+const slugify = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 function Dashboard() {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<FormState>(emptyForm);
   const [uploadingImages, setUploadingImages] = useState(false);
+
+  /** Row being edited; null means the form creates a new product. */
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  /**
+   * Image bookkeeping, so a cancelled edit neither strands files nor destroys
+   * ones the product still uses.
+   *
+   * sessionUploads — uploaded since the form was opened. Not yet referenced by
+   * any saved row, so removing one can delete it immediately, and abandoning
+   * the form should delete whatever is left.
+   *
+   * pendingDeletes — images already saved on the product that the user removed.
+   * Deleting these on click would break the live product if the edit is then
+   * cancelled, so they are held until the save succeeds.
+   */
+  const [sessionUploads, setSessionUploads] = useState<string[]>([]);
+  const [pendingDeletes, setPendingDeletes] = useState<string[]>([]);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["admin-products"],
@@ -195,11 +243,36 @@ function Dashboard() {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const createProduct = useMutation({
+  /**
+   * Returns the form to its empty state.
+   *
+   * keepUploads is set after a successful save: those files are now referenced
+   * by a stored row. Everywhere else — cancelling, switching products — the
+   * uploads were never persisted, so they are deleted rather than stranded.
+   */
+  const resetForm = ({ keepUploads = false } = {}) => {
+    if (!keepUploads && sessionUploads.length) void removeStorageObjects(sessionUploads);
+    setForm(emptyForm);
+    setEditingId(null);
+    setSessionUploads([]);
+    setPendingDeletes([]);
+  };
+
+  const startEdit = (p: ProductRow) => {
+    // Anything uploaded into the form so far belongs to the abandoned draft.
+    if (sessionUploads.length) void removeStorageObjects(sessionUploads);
+    setForm(formFromRow(p));
+    setEditingId(p.id);
+    setSessionUploads([]);
+    setPendingDeletes([]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const saveProduct = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("products").insert({
+      const payload = {
         name: form.name,
-        slug: form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+        slug: form.slug || slugify(form.name),
         category: form.category,
         brand: form.brand || null,
         price: form.price,
@@ -207,16 +280,31 @@ function Dashboard() {
         images: currentImages,
         short_description: form.short_description || null,
         description: form.description || null,
-      });
+        is_new: form.is_new,
+        featured: form.featured,
+        in_stock: form.in_stock,
+        condition: form.condition,
+        // Drop half-filled rows rather than storing blanks the product page
+        // would render as empty table cells.
+        specs: form.specs.filter((s) => s.label.trim() && s.value.trim()),
+      };
+
+      const { error } = editingId
+        ? await supabase.from("products").update(payload).eq("id", editingId)
+        : await supabase.from("products").insert(payload);
       if (error) throw error;
+
+      // Only once the row is safely written — until then the product still
+      // references these files.
+      if (pendingDeletes.length) await removeStorageObjects(pendingDeletes);
     },
     onSuccess: () => {
-      toast.success("Product added");
-      setForm(emptyForm);
+      toast.success(editingId ? "Product updated" : "Product added");
+      resetForm({ keepUploads: true });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["storefront-products"] });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not add product"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not save product"),
   });
 
   const deleteProduct = useMutation({
@@ -271,6 +359,7 @@ function Dashboard() {
         const existing = f.images.split(",").map((s) => s.trim()).filter(Boolean);
         return { ...f, images: [...existing, ...uploaded].join(", ") };
       });
+      setSessionUploads((prev) => [...prev, ...uploaded]);
 
       const noun = uploaded.length > 1 ? `${uploaded.length} images uploaded` : "Image uploaded";
       toast.success(noun, {
@@ -290,11 +379,29 @@ function Dashboard() {
       const existing = f.images.split(",").map((s) => s.trim()).filter(Boolean);
       return { ...f, images: existing.filter((img) => img !== url).join(", ") };
     });
-    // Dropping the thumbnail is the only reference to this object — without
-    // this the file stays in the bucket forever. Not awaited: the preview
-    // should disappear immediately regardless of what Storage does.
-    void removeStorageObjects([url]);
+
+    if (sessionUploads.includes(url)) {
+      // Never saved anywhere, so nothing can reference it — delete now.
+      // Not awaited: the thumbnail should vanish regardless of Storage.
+      setSessionUploads((prev) => prev.filter((u) => u !== url));
+      void removeStorageObjects([url]);
+    } else {
+      // Still referenced by the stored product. Deleting now would break the
+      // live listing if the edit is cancelled, so hold it until save.
+      setPendingDeletes((prev) => (prev.includes(url) ? prev : [...prev, url]));
+    }
   };
+
+  const setSpec = (i: number, patch: Partial<SpecRow>) =>
+    setForm((f) => ({
+      ...f,
+      specs: f.specs.map((s, n) => (n === i ? { ...s, ...patch } : s)),
+    }));
+
+  const addSpec = () => setForm((f) => ({ ...f, specs: [...f.specs, { label: "", value: "" }] }));
+
+  const removeSpec = (i: number) =>
+    setForm((f) => ({ ...f, specs: f.specs.filter((_, n) => n !== i) }));
 
   return (
     <Shell>
@@ -319,11 +426,33 @@ function Dashboard() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            createProduct.mutate();
+            saveProduct.mutate();
           }}
-          className="rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-surface)] p-7"
+          className={`rounded-2xl border bg-[var(--color-surface)] p-7 transition-colors ${
+            editingId ? "border-[var(--color-accent)]" : "border-[var(--color-hairline)]"
+          }`}
         >
-          <h2 className="text-lg tracking-[-0.02em]">Add a product</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg tracking-[-0.02em]">
+              {editingId ? "Edit product" : "Add a product"}
+            </h2>
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => resetForm()}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-hairline-strong)] px-4 py-2 text-[12px] font-medium transition-colors hover:bg-white/[0.04]"
+              >
+                <X className="size-3.5" />
+                Cancel edit
+              </button>
+            )}
+          </div>
+          {editingId && (
+            <p className="mt-2 text-[12px] text-[var(--color-ink-faint)]">
+              Editing <span className="text-[var(--color-ink-dim)]">{form.name || "product"}</span>.
+              Removed images are kept until you save.
+            </p>
+          )}
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -508,18 +637,142 @@ function Dashboard() {
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
             </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="p-condition" className={label}>
+                Condition
+              </label>
+              <select
+                id="p-condition"
+                className={field}
+                value={form.condition}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    condition: e.target.value as "new" | "certified-pre-owned",
+                  })
+                }
+              >
+                <option value="new" className="bg-[var(--color-canvas)]">
+                  New
+                </option>
+                <option value="certified-pre-owned" className="bg-[var(--color-canvas)]">
+                  Certified pre-owned
+                </option>
+              </select>
+            </div>
+
+            {/* Placement flags. These drive real storefront sections — without
+                them an added product can never reach the hero or New arrivals. */}
+            <fieldset className="sm:col-span-2">
+              <legend className={label}>Placement</legend>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {(
+                  [
+                    ["featured", "Featured", "Eligible for the homepage hero"],
+                    ["is_new", "New arrival", "Shows in New arrivals"],
+                    ["in_stock", "In stock", "Shows the in-stock badge"],
+                  ] as const
+                ).map(([key, title, hint]) => (
+                  <label
+                    key={key}
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors ${
+                      form[key]
+                        ? "border-[var(--color-accent)] bg-[var(--color-accent)]/8"
+                        : "border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form[key]}
+                      onChange={(e) => setForm({ ...form, [key]: e.target.checked })}
+                      className="mt-0.5 size-4 shrink-0 accent-[var(--color-accent)]"
+                    />
+                    <span>
+                      <span className="block text-[13px] font-medium">{title}</span>
+                      <span className="mt-0.5 block text-[11px] text-[var(--color-ink-faint)]">
+                        {hint}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <div className="sm:col-span-2">
+              <div className="flex items-center justify-between">
+                <span className={label}>Specifications</span>
+                <button
+                  type="button"
+                  onClick={addSpec}
+                  className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--color-hairline-strong)] px-3 py-1.5 text-[12px] font-medium transition-colors hover:bg-white/[0.04]"
+                >
+                  <Plus className="size-3.5" />
+                  Add row
+                </button>
+              </div>
+
+              {form.specs.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-[var(--color-hairline)] px-4 py-5 text-center text-[12px] text-[var(--color-ink-faint)]">
+                  No specifications. The product page hides the table when empty.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <AnimatePresence initial={false}>
+                    {form.specs.map((s, i) => (
+                      <motion.div
+                        key={i}
+                        layout
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -8 }}
+                        transition={springSoft}
+                        className="flex gap-2"
+                      >
+                        <input
+                          aria-label={`Specification ${i + 1} label`}
+                          placeholder="Storage"
+                          className={`${field} flex-1`}
+                          value={s.label}
+                          onChange={(e) => setSpec(i, { label: e.target.value })}
+                        />
+                        <input
+                          aria-label={`Specification ${i + 1} value`}
+                          placeholder="512GB SSD"
+                          className={`${field} flex-1`}
+                          value={s.value}
+                          onChange={(e) => setSpec(i, { value: e.target.value })}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSpec(i)}
+                          aria-label={`Remove specification ${i + 1}`}
+                          className="grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--color-hairline)] text-[var(--color-ink-faint)] transition-colors hover:border-[var(--color-sale)] hover:text-[var(--color-sale)]"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
           </div>
 
           <motion.button
             type="submit"
-            disabled={createProduct.isPending || uploadingImages}
-            whileHover={createProduct.isPending ? undefined : { scale: 1.01 }}
-            whileTap={createProduct.isPending ? undefined : { scale: 0.99 }}
+            disabled={saveProduct.isPending || uploadingImages}
+            whileHover={saveProduct.isPending ? undefined : { scale: 1.01 }}
+            whileTap={saveProduct.isPending ? undefined : { scale: 0.99 }}
             transition={springSoft}
             className="mt-7 inline-flex items-center gap-2 rounded-full bg-[var(--color-ink)] px-6 py-3.5 text-[14px] font-semibold text-[#08090a] transition-colors hover:bg-white disabled:opacity-50"
           >
-            <Plus className="size-4" />
-            {createProduct.isPending ? "Saving…" : "Add product"}
+            {editingId ? <Check className="size-4" /> : <Plus className="size-4" />}
+            {saveProduct.isPending
+              ? "Saving…"
+              : editingId
+                ? "Save changes"
+                : "Add product"}
           </motion.button>
         </form>
 
@@ -553,10 +806,12 @@ function Dashboard() {
                     layout
                     exit={{ opacity: 0, x: -12 }}
                     transition={springSoft}
-                    className="flex items-center gap-4 py-3"
+                    className={`flex items-center gap-3 rounded-lg py-3 transition-colors ${
+                      editingId === p.id ? "bg-[var(--color-accent)]/8" : ""
+                    }`}
                   >
                     <img
-                      src={p.images?.[0] ?? "/brand/nexa-logo.png"}
+                      src={p.images?.[0] ?? "/brand/nexa-wordmark-dark.png"}
                       alt=""
                       className="size-11 shrink-0 rounded-lg border border-[var(--color-hairline)] bg-[var(--color-tile)] object-cover"
                     />
@@ -564,8 +819,18 @@ function Dashboard() {
                       <p className="truncate text-[14px] font-medium">{p.name}</p>
                       <p className="tabular mt-0.5 text-[12px] text-[var(--color-ink-faint)]">
                         {p.brand} · {formatPrice(p.price)}
+                        {p.featured && <span className="ml-1.5">· Featured</span>}
+                        {p.is_new && <span className="ml-1.5">· New</span>}
                       </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => startEdit(p)}
+                      aria-label={`Edit ${p.name}`}
+                      className="grid size-9 shrink-0 place-items-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-white/[0.06] hover:text-[var(--color-ink)]"
+                    >
+                      <Pencil className="size-4" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => deleteProduct.mutate(p)}

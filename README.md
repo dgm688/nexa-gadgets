@@ -44,6 +44,7 @@ one depends on the last:
 | `20260804150000_create_products_and_site_settings.sql` | the `products` and `site_settings` tables, public-read policies, and the `site_settings` row with `id = 1` |
 | `20260804160000_update_whatsapp_number.sql` | the contact details, plus the public `product-images` bucket |
 | `20260804170000_restrict_writes_to_staff.sql` | the `staff` allow-list and every write policy on `products`, `site_settings` and `storage.objects` |
+| `20260805120000_add_product_condition.sql` | the `condition` column behind the storefront's "Certified pre-owned" section |
 
 Skipping any of them breaks the app in a way that is not obvious from the UI:
 

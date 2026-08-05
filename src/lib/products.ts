@@ -17,6 +17,7 @@ export type ProductRow = {
   is_new: boolean | null;
   featured: boolean | null;
   in_stock: boolean | null;
+  condition: string | null;
   created_at: string;
 };
 
@@ -33,7 +34,7 @@ const rowToProduct = (row: ProductRow): Product => ({
   specs: row.specs ?? [],
   isNew: row.is_new ?? false,
   featured: row.featured ?? false,
-  condition: "new",
+  condition: row.condition === "certified-pre-owned" ? "certified-pre-owned" : "new",
   inStock: row.in_stock ?? true,
 });
 
