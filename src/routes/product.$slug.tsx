@@ -25,8 +25,13 @@ export const Route = createFileRoute("/product/$slug")({ component: ProductPage 
 
 function ProductPage() {
   const { slug } = Route.useParams();
-  const { data: products = PRODUCTS } = useQuery(productsQuery);
+  const { data, isPending } = useQuery(productsQuery);
 
+  // Seed catalogue is a placeholder only until the query settles. A product
+  // that exists in the database but not in the seed list is absent from that
+  // first render, so 404 has to wait for real data — otherwise a direct load
+  // of a newly added product throws before its row ever arrives.
+  const products = data ?? PRODUCTS;
   const product = products.find((p) => p.slug === slug);
   const [active, setActive] = useState(0);
 
@@ -35,6 +40,7 @@ function ProductPage() {
     if (product) document.title = `${product.name} | ${SITE.name}`;
   }, [product]);
 
+  if (!product && isPending) return <ProductSkeleton />;
   if (!product) throw notFound();
 
   const category = CATEGORIES.find((c) => c.slug === product.category);
@@ -227,6 +233,35 @@ function ProductPage() {
           </RevealGrid>
         </Section>
       )}
+    </StoreLayout>
+  );
+}
+
+/**
+ * Mirrors the real layout's dimensions so the swap to loaded content does not
+ * shift anything. Marked aria-busy rather than aria-hidden so assistive tech
+ * announces a pending region instead of an empty page.
+ */
+function ProductSkeleton() {
+  const block = "animate-pulse rounded-xl bg-[var(--color-surface-2)]";
+  return (
+    <StoreLayout>
+      <div
+        className="container-page grid gap-12 py-14 lg:grid-cols-2 lg:gap-16"
+        aria-busy="true"
+        aria-label="Loading product"
+      >
+        <div className={`${block} aspect-square rounded-3xl`} />
+        <div>
+          <div className={`${block} h-3 w-24`} />
+          <div className={`${block} mt-4 h-9 w-4/5`} />
+          <div className={`${block} mt-4 h-4 w-3/5`} />
+          <div className={`${block} mt-8 h-11 w-40`} />
+          <div className={`${block} mt-8 h-32 rounded-2xl`} />
+          <div className={`${block} mt-6 h-13 rounded-full`} />
+          <div className={`${block} mt-3 h-13 rounded-full`} />
+        </div>
+      </div>
     </StoreLayout>
   );
 }
