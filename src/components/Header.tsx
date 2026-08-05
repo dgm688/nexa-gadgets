@@ -108,11 +108,14 @@ export function Header() {
       >
         <div className="container-page flex h-16 items-center gap-3">
           {/*
-            The wordmark is a light-background lockup with its own black frame,
-            so it sits directly on the dark canvas as a bounded object rather
-            than being recoloured. Height-constrained; width follows the 3.64:1
-            ratio, and the explicit dimensions reserve space so it cannot shift
-            layout while loading.
+            Dark variant of the brand lockup: frame and GADGETS have their
+            lightness flipped with hue held, so the original black-to-blue ramp
+            becomes white-to-periwinkle instead of inverting to yellow. The
+            yellow/pink panel is untouched. The light original lives alongside
+            it at /brand/nexa-wordmark.png for light-background use.
+
+            Explicit dimensions reserve space so it cannot shift layout while
+            loading; width follows the 3.64:1 ratio.
           */}
           <Link
             to="/"
@@ -120,7 +123,7 @@ export function Header() {
             aria-label={SITE.name}
           >
             <img
-              src="/brand/nexa-wordmark.png"
+              src="/brand/nexa-wordmark-dark.png"
               alt={SITE.name}
               width={1395}
               height={383}

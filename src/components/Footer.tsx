@@ -10,7 +10,7 @@ export function Footer() {
       <div className="container-page grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr] md:py-20">
         <div className="max-w-sm">
           <img
-            src="/brand/nexa-wordmark.png"
+            src="/brand/nexa-wordmark-dark.png"
             alt={SITE.name}
             width={1395}
             height={383}

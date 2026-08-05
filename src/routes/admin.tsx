@@ -26,7 +26,7 @@ function Shell({ children }: { children: ReactNode }) {
         <div className="container-page flex h-16 items-center justify-between">
           <Link to="/" className="flex min-h-[44px] items-center" aria-label={SITE.name}>
             <img
-              src="/brand/nexa-wordmark.png"
+              src="/brand/nexa-wordmark-dark.png"
               alt={SITE.name}
               width={1395}
               height={383}
