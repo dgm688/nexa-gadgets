@@ -36,10 +36,31 @@ Copy `.env.example` to `.env` and fill in both values. Once set:
   if the table is empty or unreachable;
 - `/admin` accepts staff sign-in and can add, photograph and remove products.
 
-Then apply `supabase/migrations/20260804160000_update_whatsapp_number.sql`, which
-updates `site_settings`, creates the public `product-images` bucket, and grants the
-INSERT/DELETE policies on `storage.objects` that the uploader needs. A public bucket
-only grants public *reads* — without those policies every upload fails on RLS.
+Then apply every migration in `supabase/migrations/`, **in filename order** — each
+one depends on the last:
+
+| Migration | Creates |
+| --- | --- |
+| `20260804150000_create_products_and_site_settings.sql` | the `products` and `site_settings` tables, public-read policies, and the `site_settings` row with `id = 1` |
+| `20260804160000_update_whatsapp_number.sql` | the contact details, plus the public `product-images` bucket |
+| `20260804170000_restrict_writes_to_staff.sql` | the `staff` allow-list and every write policy on `products`, `site_settings` and `storage.objects` |
+
+Skipping any of them breaks the app in a way that is not obvious from the UI:
+
+- without `…150000`, the next migration fails outright — it updates a table that
+  does not exist yet;
+- without `…170000`, sign-in works but every product write and every image upload
+  is rejected by row-level security.
+
+Two things about the bucket are worth stating plainly, because both have caught
+people out: a *public* bucket grants public **reads** only, so uploads still need
+an explicit INSERT policy on `storage.objects`; and `…170000` seeds the allow-list
+with a single address. Change that address to your own before running it, or no
+account will be able to manage the catalogue:
+
+```sql
+insert into public.staff (email, role) values ('you@example.com', 'admin');
+```
 
 ## Contact details
 

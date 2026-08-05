@@ -10,6 +10,7 @@ import { CATEGORIES } from "@/lib/catalog";
 import type { ProductRow } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
 import { compressImage, formatBytes } from "@/lib/image";
+import { removeStorageObjects } from "@/lib/storage";
 import { SITE } from "@/lib/site";
 import { EASE_OUT, springSoft } from "@/lib/motion";
 
@@ -219,9 +220,14 @@ function Dashboard() {
   });
 
   const deleteProduct = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("products").delete().eq("id", id);
+    // Takes the whole row rather than an id so its images can be cleaned up.
+    // Storage objects are not cascade-deleted with the row that referenced them.
+    mutationFn: async (product: ProductRow) => {
+      const { error } = await supabase.from("products").delete().eq("id", product.id);
       if (error) throw error;
+      // Only after the row is gone — deleting files first would leave a live
+      // product pointing at missing images if the row delete then failed.
+      await removeStorageObjects(product.images ?? []);
     },
     onSuccess: () => {
       toast.success("Product removed");
@@ -235,8 +241,14 @@ function Dashboard() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     setUploadingImages(true);
+
+    // Hoisted out of the try so the catch can reach anything already stored.
+    // Uploads happen one at a time, but the URLs only reach form state after
+    // the whole batch succeeds — so a failure on image three would otherwise
+    // strand images one and two in the bucket with no reference to them.
+    const uploaded: string[] = [];
+
     try {
-      const uploaded: string[] = [];
       let savedBytes = 0;
 
       for (const file of Array.from(files)) {
@@ -265,6 +277,7 @@ function Dashboard() {
         description: savedBytes > 0 ? `Compressed, saving ${formatBytes(savedBytes)}` : undefined,
       });
     } catch (err) {
+      void removeStorageObjects(uploaded);
       toast.error(err instanceof Error ? err.message : "Image upload failed");
     } finally {
       setUploadingImages(false);
@@ -277,6 +290,10 @@ function Dashboard() {
       const existing = f.images.split(",").map((s) => s.trim()).filter(Boolean);
       return { ...f, images: existing.filter((img) => img !== url).join(", ") };
     });
+    // Dropping the thumbnail is the only reference to this object — without
+    // this the file stays in the bucket forever. Not awaited: the preview
+    // should disappear immediately regardless of what Storage does.
+    void removeStorageObjects([url]);
   };
 
   return (
@@ -551,7 +568,7 @@ function Dashboard() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => deleteProduct.mutate(p.id)}
+                      onClick={() => deleteProduct.mutate(p)}
                       aria-label={`Delete ${p.name}`}
                       className="grid size-9 shrink-0 place-items-center rounded-lg text-[var(--color-ink-faint)] transition-colors hover:bg-[var(--color-sale)]/12 hover:text-[var(--color-sale)]"
                     >
