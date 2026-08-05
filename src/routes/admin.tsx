@@ -9,6 +9,7 @@ import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/catalog";
 import type { ProductRow } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
+import { compressImage, formatBytes } from "@/lib/image";
 import { SITE } from "@/lib/site";
 import { EASE_OUT, springSoft } from "@/lib/motion";
 
@@ -236,19 +237,33 @@ function Dashboard() {
     setUploadingImages(true);
     try {
       const uploaded: string[] = [];
+      let savedBytes = 0;
+
       for (const file of Array.from(files)) {
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `${crypto.randomUUID()}.${ext}`;
-        const { error } = await supabase.storage.from("product-images").upload(path, file);
+        // Downscale before upload — a 2.4 MB phone photo becomes a few hundred
+        // KB, and the original never crosses the network. Falls back to the
+        // untouched file if compression is inapplicable or fails.
+        const img = await compressImage(file);
+        savedBytes += img.originalBytes - img.bytes;
+
+        const path = `${crypto.randomUUID()}.${img.ext}`;
+        const { error } = await supabase.storage
+          .from("product-images")
+          .upload(path, img.blob, { contentType: img.contentType });
         if (error) throw error;
         const { data } = supabase.storage.from("product-images").getPublicUrl(path);
         uploaded.push(data.publicUrl);
       }
+
       setForm((f) => {
         const existing = f.images.split(",").map((s) => s.trim()).filter(Boolean);
         return { ...f, images: [...existing, ...uploaded].join(", ") };
       });
-      toast.success(uploaded.length > 1 ? `${uploaded.length} images uploaded` : "Image uploaded");
+
+      const noun = uploaded.length > 1 ? `${uploaded.length} images uploaded` : "Image uploaded";
+      toast.success(noun, {
+        description: savedBytes > 0 ? `Compressed, saving ${formatBytes(savedBytes)}` : undefined,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Image upload failed");
     } finally {
@@ -399,7 +414,7 @@ function Dashboard() {
                 <ImagePlus className="size-5" />
                 {uploadingImages ? "Uploading…" : "Click to upload image(s)"}
                 <span className="text-[11px] text-[var(--color-ink-faint)]">
-                  PNG or JPG, multiple allowed
+                  Multiple allowed · resized and compressed automatically
                 </span>
               </label>
               <input
