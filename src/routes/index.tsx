@@ -19,6 +19,7 @@ import { productsQuery } from "@/lib/products";
 import { SITE } from "@/lib/site";
 import { fadeUp, revealOnce } from "@/lib/motion";
 import { useSaleActive } from "@/lib/sale";
+import { SITE_URL, useSeo } from "@/lib/seo";
 import { telHref, whatsappGeneral } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -53,6 +54,21 @@ const grid = "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4";
 function Home() {
   const { data: products = PRODUCTS } = useQuery(productsQuery);
   const saleActive = useSaleActive();
+
+  useSeo({
+    title: `${SITE.name} | 20% off electronics, same-day delivery in all 50 states`,
+    path: "/",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Store",
+      name: SITE.name,
+      url: SITE_URL,
+      telephone: SITE.phone,
+      email: SITE.email,
+      image: `${SITE_URL}/brand/og.jpg`,
+      areaServed: "US",
+    },
+  });
 
   const featured = products.find((p) => p.featured) ?? products[0];
   const onSale = products

@@ -20,6 +20,7 @@ import { depositFor, discountPercent, formatPrice } from "@/lib/format";
 import { SITE } from "@/lib/site";
 import { telHref, whatsappOrder } from "@/lib/whatsapp";
 import { EASE_OUT } from "@/lib/motion";
+import { absoluteUrl, useSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/product/$slug")({ component: ProductPage });
 
@@ -37,8 +38,42 @@ function ProductPage() {
 
   useEffect(() => {
     setActive(0);
-    if (product) document.title = `${product.name} | ${SITE.name}`;
   }, [product]);
+
+  useSeo({
+    title: product ? `${product.name} | ${SITE.name}` : `Loading | ${SITE.name}`,
+    description: product
+      ? `${product.shortDescription} ${formatPrice(product.price)} at ${SITE.name} — in store in all 50 states, or reserve with a 50% deposit.`
+      : undefined,
+    path: `/product/${slug}`,
+    image: product?.images[0],
+    type: "product",
+    // Product schema drives Google's price/availability rich result.
+    jsonLd: product
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          description: product.description || product.shortDescription,
+          image: product.images.map(absoluteUrl),
+          brand: { "@type": "Brand", name: product.brand },
+          sku: product.slug,
+          offers: {
+            "@type": "Offer",
+            url: absoluteUrl(`/product/${product.slug}`),
+            priceCurrency: "USD",
+            price: product.price,
+            availability: product.inStock
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+            itemCondition:
+              product.condition === "certified-pre-owned"
+                ? "https://schema.org/RefurbishedCondition"
+                : "https://schema.org/NewCondition",
+          },
+        }
+      : undefined,
+  });
 
   if (!product && isPending) return <ProductSkeleton />;
   if (!product) throw notFound();

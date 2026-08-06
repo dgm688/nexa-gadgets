@@ -8,6 +8,8 @@ import { CATEGORIES, PRODUCTS, productsInCategory } from "@/lib/catalog";
 import { productsQuery } from "@/lib/products";
 import { whatsappGeneral } from "@/lib/whatsapp";
 import { EASE_OUT } from "@/lib/motion";
+import { useSeo } from "@/lib/seo";
+import { SITE } from "@/lib/site";
 
 export const Route = createFileRoute("/category/$slug")({ component: CategoryPage });
 
@@ -19,6 +21,12 @@ function CategoryPage() {
   if (!category) throw notFound();
 
   const items = productsInCategory(slug, products);
+
+  useSeo({
+    title: `${category.name} | ${SITE.name}`,
+    description: `${category.blurb}. ${category.name} at ${SITE.name} — every price 20% below retail, in store in all 50 states with same-day delivery.`,
+    path: `/category/${slug}`,
+  });
 
   return (
     <StoreLayout>

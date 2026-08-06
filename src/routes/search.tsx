@@ -10,6 +10,8 @@ import { PRODUCTS } from "@/lib/catalog";
 import { productsQuery } from "@/lib/products";
 import { whatsappGeneral } from "@/lib/whatsapp";
 import { EASE_OUT } from "@/lib/motion";
+import { useSeo } from "@/lib/seo";
+import { SITE } from "@/lib/site";
 
 type SearchParams = { q: string };
 
@@ -35,6 +37,14 @@ function SearchPage() {
           .includes(needle),
       )
     : products;
+
+  useSeo({
+    title: needle ? `“${q}” | ${SITE.name}` : `Search products | ${SITE.name}`,
+    path: "/search",
+    // Query pages are thin and endlessly variable; indexing them would bury
+    // the real category and product pages under near-duplicates.
+    noIndex: true,
+  });
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
