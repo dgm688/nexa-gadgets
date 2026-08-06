@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Check, ImagePlus, LogOut, Pencil, Plus, Trash2, X } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/catalog";
-import type { ProductRow } from "@/lib/products";
+import { PLACEHOLDER_IMAGE, type ProductRow } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
 import { compressImage, formatBytes } from "@/lib/image";
 import { removeStorageObjects } from "@/lib/storage";
@@ -161,7 +161,18 @@ function SignIn() {
   );
 }
 
+/** Stored shape. */
 type SpecRow = { label: string; value: string };
+
+/**
+ * Editor shape. Rows need an identity independent of position: keying by
+ * array index makes React reuse the wrong inputs when a middle row is
+ * removed, so AnimatePresence animates out the last row while the values
+ * above it shift up.
+ */
+type SpecDraft = SpecRow & { id: string };
+
+const toDraft = (s: SpecRow): SpecDraft => ({ ...s, id: crypto.randomUUID() });
 
 const emptyForm = {
   name: "",
@@ -177,7 +188,7 @@ const emptyForm = {
   featured: false,
   in_stock: true,
   condition: "new" as "new" | "certified-pre-owned",
-  specs: [] as SpecRow[],
+  specs: [] as SpecDraft[],
 };
 
 type FormState = typeof emptyForm;
@@ -197,7 +208,7 @@ const formFromRow = (p: ProductRow): FormState => ({
   featured: p.featured ?? false,
   in_stock: p.in_stock ?? true,
   condition: p.condition === "certified-pre-owned" ? "certified-pre-owned" : "new",
-  specs: Array.isArray(p.specs) ? p.specs : [],
+  specs: Array.isArray(p.specs) ? p.specs.map(toDraft) : [],
 });
 
 const slugify = (s: string) =>
@@ -286,7 +297,9 @@ function Dashboard() {
         condition: form.condition,
         // Drop half-filled rows rather than storing blanks the product page
         // would render as empty table cells.
-        specs: form.specs.filter((s) => s.label.trim() && s.value.trim()),
+        specs: form.specs
+          .filter((s) => s.label.trim() && s.value.trim())
+          .map(({ label, value }) => ({ label, value })),
       };
 
       const { error } = editingId
@@ -398,7 +411,8 @@ function Dashboard() {
       specs: f.specs.map((s, n) => (n === i ? { ...s, ...patch } : s)),
     }));
 
-  const addSpec = () => setForm((f) => ({ ...f, specs: [...f.specs, { label: "", value: "" }] }));
+  const addSpec = () =>
+    setForm((f) => ({ ...f, specs: [...f.specs, toDraft({ label: "", value: "" })] }));
 
   const removeSpec = (i: number) =>
     setForm((f) => ({ ...f, specs: f.specs.filter((_, n) => n !== i) }));
@@ -721,7 +735,7 @@ function Dashboard() {
                   <AnimatePresence initial={false}>
                     {form.specs.map((s, i) => (
                       <motion.div
-                        key={i}
+                        key={s.id}
                         layout
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -811,7 +825,7 @@ function Dashboard() {
                     }`}
                   >
                     <img
-                      src={p.images?.[0] ?? "/brand/nexa-wordmark-dark.png"}
+                      src={p.images?.[0] ?? PLACEHOLDER_IMAGE}
                       alt=""
                       className="size-11 shrink-0 rounded-lg border border-[var(--color-hairline)] bg-[var(--color-tile)] object-cover"
                     />

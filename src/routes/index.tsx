@@ -6,8 +6,9 @@ import { StoreLayout } from "@/components/StoreLayout";
 import { Hero } from "@/components/Hero";
 import { ProductCard } from "@/components/ProductCard";
 import {
-  ButtonGhost,
+  BTN_GHOST,
   ButtonPrimary,
+  MotionLink,
   RevealGrid,
   RevealItem,
   Section,
@@ -17,6 +18,7 @@ import { CATEGORIES, PRODUCTS } from "@/lib/catalog";
 import { productsQuery } from "@/lib/products";
 import { SITE } from "@/lib/site";
 import { fadeUp, revealOnce } from "@/lib/motion";
+import { useSaleActive } from "@/lib/sale";
 import { telHref, whatsappGeneral } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -50,6 +52,7 @@ const grid = "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4";
 
 function Home() {
   const { data: products = PRODUCTS } = useQuery(productsQuery);
+  const saleActive = useSaleActive();
 
   const featured = products.find((p) => p.featured) ?? products[0];
   const onSale = products
@@ -79,13 +82,21 @@ function Home() {
 
       <Section>
         <SectionHead
-          overline="Flash sale"
-          title="20% off, while the clock runs"
-          lede="Every price already reflects the discount. When the countdown ends, they go back up."
+          overline={saleActive ? "Flash sale" : "Best sellers"}
+          title={saleActive ? "20% off, while the clock runs" : "Reduced from retail"}
+          lede={
+            saleActive
+              ? "Every price already reflects the discount. When the countdown ends, they go back up."
+              : "Still below the recommended retail price on every product listed."
+          }
           action={
-            <ButtonGhost href="/search?q=" className="hidden sm:inline-flex">
+            <MotionLink
+              to="/search"
+              search={{ q: "" }}
+              className={`${BTN_GHOST} hidden sm:inline-flex`}
+            >
               View all products
-            </ButtonGhost>
+            </MotionLink>
           }
         />
         <RevealGrid className={grid}>
@@ -203,7 +214,9 @@ function Home() {
               <ButtonPrimary href={whatsappGeneral()} external>
                 Chat with us
               </ButtonPrimary>
-              <ButtonGhost href="/search?q=">Browse products</ButtonGhost>
+              <MotionLink to="/search" search={{ q: "" }} className={BTN_GHOST}>
+                Browse products
+              </MotionLink>
             </div>
             <p className="mt-7 text-[12px] text-[var(--color-ink-faint)]">
               Or call{" "}

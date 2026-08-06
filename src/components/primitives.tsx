@@ -1,6 +1,42 @@
-import type { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { forwardRef, type ReactNode } from "react";
+import { motion, type HTMLMotionProps } from "framer-motion";
+import { createLink } from "@tanstack/react-router";
 import { fadeUp, revealOnce, springSoft, stagger, tileIn } from "@/lib/motion";
+
+/**
+ * Button styling shared by the plain <a>/<button> variants below and by
+ * MotionLink, so an internal and an external CTA are visually identical.
+ */
+export const BTN_PRIMARY =
+  "group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-ink)] px-6 py-3 text-[14px] font-semibold text-[#08090a] transition-colors duration-200 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50";
+
+export const BTN_GHOST =
+  "inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-hairline-strong)] px-6 py-3 text-[14px] font-medium text-[var(--color-ink)] transition-colors duration-200 hover:border-[var(--color-ink-dim)] hover:bg-white/[0.04]";
+
+// HTMLMotionProps rather than React.AnchorHTMLAttributes: the two disagree on
+// onAnimationStart, which is a DOM event for React and an animation definition
+// for Framer.
+const MotionAnchor = forwardRef<HTMLAnchorElement, HTMLMotionProps<"a">>((props, ref) => (
+  <motion.a
+    ref={ref}
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    transition={springSoft}
+    {...props}
+  />
+));
+MotionAnchor.displayName = "MotionAnchor";
+
+/**
+ * Animated CTA that navigates through the router.
+ *
+ * Passing an internal path to the plain button variants renders a bare <a>,
+ * which tears down the whole app and re-downloads the bundle on every click —
+ * the entire point of a client-routed SPA, lost on the most prominent buttons
+ * on the page. createLink keeps TanStack's route typing intact, so `to`,
+ * `params` and `search` are still checked against the real route tree.
+ */
+export const MotionLink = createLink(MotionAnchor);
 
 /** Section wrapper with consistent vertical rhythm. */
 export function Section({

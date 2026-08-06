@@ -4,10 +4,11 @@ import { ArrowRight, Store, Truck, Wallet } from "lucide-react";
 import type { Product } from "@/lib/catalog";
 import { depositFor, discountPercent, formatPrice } from "@/lib/format";
 import { SALE } from "@/lib/site";
+import { useSaleActive } from "@/lib/sale";
 import { whatsappOrder } from "@/lib/whatsapp";
 import { EASE_OUT, stagger } from "@/lib/motion";
 import { Countdown } from "./Countdown";
-import { ButtonGhost, ButtonPrimary, Pill } from "./primitives";
+import { BTN_GHOST, BTN_PRIMARY, ButtonPrimary, MotionLink, Pill } from "./primitives";
 
 const item = {
   hidden: { opacity: 0, y: 20 },
@@ -22,6 +23,7 @@ const item = {
  * better and removes an entire class of motion and a11y problems.
  */
 export function Hero({ featured }: { featured?: Product }) {
+  const saleActive = useSaleActive();
   const off = featured ? discountPercent(featured.price, featured.originalPrice) : 0;
 
   return (
@@ -40,9 +42,15 @@ export function Hero({ featured }: { featured?: Product }) {
       <div className="container-page relative grid items-center gap-14 py-20 md:py-28 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
         <motion.div variants={stagger(0.08)} initial="hidden" animate="show">
           <motion.div variants={item} className="flex flex-wrap items-center gap-3">
-            <Pill tone="accent">20% off storewide</Pill>
-            <span className="text-[13px] text-[var(--color-ink-faint)]">ends in</span>
-            <Countdown endsAt={SALE.endsAt} />
+            {saleActive ? (
+              <>
+                <Pill tone="accent">20% off storewide</Pill>
+                <span className="text-[13px] text-[var(--color-ink-faint)]">ends in</span>
+                <Countdown endsAt={SALE.endsAt} />
+              </>
+            ) : (
+              <Pill tone="neutral">In store in all 50 states</Pill>
+            )}
           </motion.div>
 
           <motion.h1
@@ -63,11 +71,17 @@ export function Hero({ featured }: { featured?: Product }) {
           </motion.p>
 
           <motion.div variants={item} className="mt-9 flex flex-wrap gap-3">
-            <ButtonPrimary href="/category/mobile-phones">
+            <MotionLink
+              to="/category/$slug"
+              params={{ slug: "mobile-phones" }}
+              className={BTN_PRIMARY}
+            >
               Shop the sale
               <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-            </ButtonPrimary>
-            <ButtonGhost href="/search?q=">Browse everything</ButtonGhost>
+            </MotionLink>
+            <MotionLink to="/search" search={{ q: "" }} className={BTN_GHOST}>
+              Browse everything
+            </MotionLink>
           </motion.div>
 
           <motion.dl

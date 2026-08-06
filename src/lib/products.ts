@@ -1,6 +1,9 @@
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { PRODUCTS, type CategorySlug, type Product, type Spec } from "./catalog";
 
+/** Neutral tile shown when a product has no photograph of its own. */
+export const PLACEHOLDER_IMAGE = "/brand/placeholder.svg";
+
 /** Shape of a row in the Supabase `products` table. */
 export type ProductRow = {
   id: string;
@@ -30,7 +33,9 @@ const rowToProduct = (row: ProductRow): Product => ({
   description: row.description ?? "",
   price: row.price,
   originalPrice: row.original_price ?? row.price,
-  images: row.images?.length ? row.images : ["/products/tv-hisense.jpg"],
+  // A product saved without photos previously fell back to a bundled Hisense
+  // TV shot, so an unrelated product's picture was presented as its own.
+  images: row.images?.length ? row.images : [PLACEHOLDER_IMAGE],
   specs: row.specs ?? [],
   isNew: row.is_new ?? false,
   featured: row.featured ?? false,
